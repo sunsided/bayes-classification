@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using BayesianClassifier;
 using FluentAssertions;
 using NUnit.Framework;
@@ -155,6 +156,42 @@ namespace BayesianClassifierTests
 
             _dataSet.TokenCount.Should().Be(2, "because we added three tokens including two occurrences of the same distinct tokens");
             _dataSet.SetSize.Should().Be(3, "because we added three tokens");
+        }
+
+        [Test]
+        public void EnumeratingTheTokensYieldsTheCurrectCount()
+        {
+            var token1 = new StringToken("foo");
+            var token2 = new StringToken("foo");
+            var token3 = new StringToken("bar");
+            _dataSet.AddToken(token1, token2, token3);
+
+            var counts = _dataSet.Select(x => x).ToList();
+            counts.Count.Should().Be(2, "because only two distinct items were added");
+            counts.Aggregate(0L, (i, entry) => i + entry.Count).Should().Be(3, "because three tokens were added");
+
+            // select the only instance of the first token
+            var element1 = counts.Where(entry => entry.Token.Equals(token1))
+                .Select(entry => entry.Count)
+                .Single();
+
+            // check the count
+            element1
+                .Should()
+                .Be(2, "because two instances of that token were added");
+
+            // select the same instance as above with the second instance of the first token as reference
+            counts.Where(entry => entry.Token.Equals(token2))
+                .Select(entry => entry.Count)
+                .Single()
+                .Should()
+                .Be(element1, "because two instances of that token were added");
+
+            counts.Where(entry => entry.Token.Equals(token3))
+                .Select(entry => entry.Count)
+                .Single()
+                .Should()
+                .Be(1, "because one instance of that token was added");
         }
     }
 }
