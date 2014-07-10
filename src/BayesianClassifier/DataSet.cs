@@ -118,34 +118,108 @@ namespace BayesianClassifier
         /// or
         /// additionalTokens
         /// </exception>
-        public void RemoveToken([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
+        /// <seealso cref="PurgeToken(TToken,TToken[])"/>
+        public void RemoveTokenOnce([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
             if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
 
-            long ignoredCount;
-            if (_tokenCount.TryRemove(token, out ignoredCount))
-            {
-                Interlocked.Decrement(ref _setSize);
-            }
-
-            RemoveToken(additionalTokens);
+            RemoveSingleTokenInternal(token);
+            RemoveTokenOnce(additionalTokens);
         }
-
+        
         /// <summary>
         /// Removes the given tokens a single time, decrementing the <see cref="SetSize"/> and,
         /// eventually, the <see cref="TokenCount"/>.
         /// </summary>
         /// <param name="tokens">The tokens.</param>
         /// <exception cref="System.ArgumentNullException">tokens</exception>
-        public void RemoveToken([NotNull] IEnumerable<TToken> tokens)
+        /// <seealso cref="PurgeToken(IEnumerable&lt;TToken&gt;)"/>
+        public void RemoveTokenOnce([NotNull] IEnumerable<TToken> tokens)
         {
             if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
 
             foreach (var token in tokens)
             {
-                long ignoredCount;
-                if (_tokenCount.TryRemove(token, out ignoredCount))
+                RemoveSingleTokenInternal(token);
+            }
+        }
+        
+        /// <summary>
+        /// Removes the given tokens a single time, decrementing the <see cref="SetSize"/> and,
+        /// eventually, the <see cref="TokenCount"/>.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="additionalTokens">The additional tokens.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// token
+        /// or
+        /// additionalTokens
+        /// </exception>
+        /// <seealso cref="RemoveTokenOnce(TToken,TToken[])"/>
+        public void PurgeToken([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
+        {
+            if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+            if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
+
+            PurgeTokenInternal(token);
+            PurgeToken(additionalTokens);
+        }
+        
+        /// <summary>
+        /// Removes the given tokens a single time, decrementing the <see cref="SetSize"/> and,
+        /// eventually, the <see cref="TokenCount"/>.
+        /// </summary>
+        /// <param name="tokens">The tokens.</param>
+        /// <exception cref="System.ArgumentNullException">tokens</exception>
+        /// <seealso cref="RemoveTokenOnce(IEnumerable&lt;TToken&gt;)"/>
+        public void PurgeToken([NotNull] IEnumerable<TToken> tokens)
+        {
+            if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
+
+            foreach (var token in tokens)
+            {
+                PurgeTokenInternal(token);
+            }
+        }
+
+        /// <summary>
+        /// Removes the single token internally.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        private void RemoveSingleTokenInternal([NotNull] TToken token)
+        {
+            long count;
+            while (_tokenCount.TryGetValue(token, out count))
+            {
+                var newValue = count - 1;
+                var collectionUpdated = _tokenCount.TryUpdate(token, newValue: newValue, comparisonValue: count);
+                if (!collectionUpdated) continue;
+                Interlocked.Decrement(ref _setSize);
+
+                if (newValue == 0)
+                {
+                    // explicit removal if the count is zero
+                    var collection = _tokenCount as ICollection<KeyValuePair<TToken, long>>;
+                    collection.Remove(new KeyValuePair<TToken, long>(token, 0));
+                }
+
+                break;
+            }
+        }
+
+        /// <summary>
+        /// Purges a single token internally.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        private void PurgeTokenInternal([NotNull] TToken token)
+        {
+            long count;
+            if (_tokenCount.TryRemove(token, out count))
+            {
+                // decrement 'count' times
+                // TODO: use Interlocked.CompareExchange
+                for (int i = 0; i < count; ++i)
                 {
                     Interlocked.Decrement(ref _setSize);
                 }
