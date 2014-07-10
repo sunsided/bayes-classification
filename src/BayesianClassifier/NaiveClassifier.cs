@@ -13,7 +13,7 @@ namespace BayesianClassifier
     /// Assumes that all token occurrences are statistically independent.
     /// </para>
     /// </summary>
-    public sealed class NaiveClassifier
+    public sealed class NaiveClassifier : IClassifier
     {
         /// <summary>
         /// The training sets

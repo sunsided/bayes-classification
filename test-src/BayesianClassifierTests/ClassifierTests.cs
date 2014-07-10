@@ -17,7 +17,7 @@ namespace BayesianClassifierTests
         /// <summary>
         /// The classifier
         /// </summary>
-        private NaiveClassifier _classifier;
+        private IClassifier _classifier;
 
         /// <summary>
         /// The spam class
@@ -44,7 +44,7 @@ namespace BayesianClassifierTests
         /// </summary>
         /// <returns>Classifier&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private NaiveClassifier BuildClassifier([NotNull] ITrainingSetAccessor trainingSet)
+        private IClassifier BuildClassifier([NotNull] ITrainingSetAccessor trainingSet)
         {
             var classifier = new NaiveClassifier(trainingSet)
             {

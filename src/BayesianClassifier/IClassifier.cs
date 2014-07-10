@@ -1,0 +1,56 @@
+using System.Collections.Generic;
+using JetBrains.Annotations;
+
+namespace BayesianClassifier
+{
+    /// <summary>
+    /// Interface IClassifier
+    /// </summary>
+    public interface IClassifier
+    {
+        /// <summary>
+        /// Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.
+        /// <para>
+        /// Laplace smoothing is required in the context or rare (i.e. untrained) tokens or tokens
+        /// that do not appear in some classes. With smoothing disabled, these tokens result
+        /// in a zero probability for the whole class. To counter that, a positive ("alpha")
+        /// value for smoothing can be set.
+        /// </para>
+        /// </summary>
+        double SmoothingAlpha { get; set; }
+
+        /// <summary>
+        /// Calculates the probability of having the <see cref="IClass"/> 
+        /// given the occurrence of the <see cref="IToken"/>.
+        /// </summary>
+        /// <param name="classUnderTest">The class under test.</param>
+        /// <param name="token">The token.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied, setting to <see langword="null"/> defaults to the values set in <see cref="SmoothingAlpha"/>.</param>
+        /// <returns>System.Double.</returns>
+        double CalculateProbability([NotNull] IClass classUnderTest, [NotNull] IToken token, double? alpha = null);
+
+        /// <summary>
+        /// Calculates the probability of having the 
+        /// <see cref="IClass" />
+        /// given the occurrence of the 
+        /// <see cref="IToken" />.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied, setting to <see langword="null"/> defaults to the values set in <see cref="SmoothingAlpha"/>.</param>
+        /// <returns>System.Double.</returns>
+        [NotNull]
+        IEnumerable<ConditionalProbability> CalculateProbabilities([NotNull] IToken token, double? alpha = null);
+
+        /// <summary>
+        /// Calculates the probability of having the
+        /// <see cref="IClass" />
+        /// given the occurrence of the
+        /// <see cref="IToken" />.
+        /// </summary>
+        /// <param name="tokens">The tokens.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied, setting to <see langword="null"/> defaults to the values set in <see cref="SmoothingAlpha"/>.</param>
+        /// <returns>System.Double.</returns>
+        [NotNull]
+        IEnumerable<GroupedConditionalProbability> CalculateProbabilities([NotNull] ICollection<IToken> tokens, double? alpha = null);
+    }
+}
