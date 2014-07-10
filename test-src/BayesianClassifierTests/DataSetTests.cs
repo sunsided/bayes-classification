@@ -17,7 +17,7 @@ namespace BayesianClassifierTests
         /// <summary>
         /// The data set
         /// </summary>
-        private DataSet<StringClass, StringToken> _dataSet;
+        private DataSet _dataSet;
 
         /// <summary>
         /// Sets up the test.
@@ -26,7 +26,7 @@ namespace BayesianClassifierTests
         public void SetUp()
         {
             _class = new StringClass(Guid.NewGuid().ToString(), 1.0D);
-            _dataSet = new DataSet<StringClass, StringToken>(_class);
+            _dataSet = new DataSet(_class);
         }
 
         [Test]

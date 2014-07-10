@@ -8,17 +8,13 @@ namespace BayesianClassifier
     /// <summary>
     /// Class EmptyDataSet. This class cannot be inherited.
     /// </summary>
-    /// <typeparam name="TClass">The type of the t class.</typeparam>
-    /// <typeparam name="TToken">The type of the t token.</typeparam>
-    internal sealed class EmptyDataSet<TClass, TToken> : IDataSet<TClass, TToken> 
-        where TClass: IClass
-        where TToken: IToken
+    internal sealed class EmptyDataSet : IDataSet
     {
         /// <summary>
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
-        public IEnumerator<TokenCount<TToken>> GetEnumerator()
+        public IEnumerator<TokenCount> GetEnumerator()
         {
             yield break;
         }
@@ -48,24 +44,24 @@ namespace BayesianClassifier
         /// Gets the class.
         /// </summary>
         /// <value>The class.</value>
-        public TClass Class { get; private set; }
+        public IClass Class { get; private set; }
 
         /// <summary>
-        /// Gets the <see cref="TokenInformation{TToken}"/> with the specified token.
+        /// Gets the <see cref="TokenInformation{IToken}"/> with the specified token.
         /// </summary>
         /// <param name="token">The token.</param>
-        /// <returns>TokenInformation&lt;TToken&gt;.</returns>
-        public TokenInformation<TToken> this[TToken token]
+        /// <returns>TokenInformation&lt;IToken&gt;.</returns>
+        public TokenInformation<IToken> this[IToken token]
         {
-            get { return new TokenInformation<TToken>(token, 0L, 0D); }
+            get { return new TokenInformation<IToken>(token, 0L, 0D); }
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="EmptyDataSet{TClass, TToken}"/> class.
+        /// Initializes a new instance of the <see cref="EmptyDataSet"/> class.
         /// </summary>
         /// <param name="class">The class.</param>
         /// <exception cref="System.ArgumentNullException">class</exception>
-        public EmptyDataSet([NotNull] TClass @class)
+        public EmptyDataSet([NotNull] IClass @class)
         {
             if (ReferenceEquals(null, @class)) throw new ArgumentNullException("class");
             Class = @class;
@@ -76,7 +72,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Int64.</returns>
-        public long GetCount(TToken token)
+        public long GetCount(IToken token)
         {
             return 0L;
         }
@@ -86,7 +82,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Double.</returns>
-        public double GetPercentage(TToken token)
+        public double GetPercentage(IToken token)
         {
             return 0D;
         }
@@ -97,7 +93,7 @@ namespace BayesianClassifier
         /// <param name="token">The token.</param>
         /// <param name="additionalTokens">The additional tokens.</param>
         /// <exception cref="System.InvalidOperationException">Adding data to the empty data set is not allowed.</exception>
-        public void AddToken(TToken token, params TToken[] additionalTokens)
+        public void AddToken(IToken token, params IToken[] additionalTokens)
         {
             throw new InvalidOperationException("Adding data to the empty data set is not allowed.");
         }
@@ -107,7 +103,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="tokens">The tokens.</param>
         /// <exception cref="System.InvalidOperationException">Adding data to the empty data set is not allowed.</exception>
-        public void AddToken(IEnumerable<TToken> tokens)
+        public void AddToken(IEnumerable<IToken> tokens)
         {
             throw new InvalidOperationException("Adding data to the empty data set is not allowed.");
         }
@@ -117,7 +113,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <param name="additionalTokens">The additional tokens.</param>
-        public void RemoveTokenOnce(TToken token, params TToken[] additionalTokens)
+        public void RemoveTokenOnce(IToken token, params IToken[] additionalTokens)
         {
         }
 
@@ -125,7 +121,7 @@ namespace BayesianClassifier
         /// Removes the token once.
         /// </summary>
         /// <param name="tokens">The tokens.</param>
-        public void RemoveTokenOnce(IEnumerable<TToken> tokens)
+        public void RemoveTokenOnce(IEnumerable<IToken> tokens)
         {
         }
 
@@ -134,7 +130,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <param name="additionalTokens">The additional tokens.</param>
-        public void PurgeToken(TToken token, params TToken[] additionalTokens)
+        public void PurgeToken(IToken token, params IToken[] additionalTokens)
         {
         }
 
@@ -142,7 +138,7 @@ namespace BayesianClassifier
         /// Purges the token.
         /// </summary>
         /// <param name="tokens">The tokens.</param>
-        public void PurgeToken(IEnumerable<TToken> tokens)
+        public void PurgeToken(IEnumerable<IToken> tokens)
         {
         }
     }

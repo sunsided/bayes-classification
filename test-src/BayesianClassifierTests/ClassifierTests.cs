@@ -12,22 +12,22 @@ namespace BayesianClassifierTests
         /// <summary>
         /// The training set
         /// </summary>
-        private ITrainingSet<StringClass, StringToken> _trainingSet;
+        private ITrainingSet _trainingSet;
 
         /// <summary>
         /// The classifier
         /// </summary>
-        private NaiveClassifier<StringClass, StringToken> _classifier;
+        private NaiveClassifier _classifier;
 
         /// <summary>
         /// The spam class
         /// </summary>
-        private static StringClass _spamClass;
+        private static IClass _spamClass;
 
         /// <summary>
         /// The ham class
         /// </summary>
-        private static StringClass _hamClass;
+        private static IClass _hamClass;
 
         /// <summary>
         /// Sets up.
@@ -44,9 +44,9 @@ namespace BayesianClassifierTests
         /// </summary>
         /// <returns>Classifier&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private NaiveClassifier<StringClass, StringToken> BuildClassifier([NotNull] ITrainingSetAccessor<StringClass, StringToken> trainingSet)
+        private NaiveClassifier BuildClassifier([NotNull] ITrainingSetAccessor trainingSet)
         {
-            return new NaiveClassifier<StringClass, StringToken>(trainingSet);
+            return new NaiveClassifier(trainingSet);
         }
 
         /// <summary>
@@ -54,9 +54,9 @@ namespace BayesianClassifierTests
         /// </summary>
         /// <returns>ITrainingSet&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private static ITrainingSet<StringClass, StringToken> BuildTrainingSet()
+        private static ITrainingSet BuildTrainingSet()
         {
-            var trainingSet = new TrainingSet<StringClass, StringToken>();
+            var trainingSet = new TrainingSet();
 
             // build data sets
             var spamSet = BuildSpamDataSet();
@@ -80,7 +80,7 @@ namespace BayesianClassifierTests
         /// </summary>
         /// <returns>IDataSet&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private static IDataSet<StringClass, StringToken> BuildSpamDataSet()
+        private static IDataSet BuildSpamDataSet()
         {
             return BuildDataSet("spam", 0.5D, "rolex", "watches", "viagra", "prince", "money", "send", "xyzzy");
         }
@@ -90,7 +90,7 @@ namespace BayesianClassifierTests
         /// </summary>
         /// <returns>IDataSet&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private static IDataSet<StringClass, StringToken> BuildHamDataSet()
+        private static IDataSet BuildHamDataSet()
         {
             return BuildDataSet("ham", 0.5D, "love", "flowers", "unicorn", "friendship", "money", "send", "send");
         }
@@ -104,10 +104,10 @@ namespace BayesianClassifierTests
         /// <param name="additionalTokens">The additional tokens.</param>
         /// <returns>IDataSet&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private static IDataSet<StringClass, StringToken> BuildDataSet([NotNull] string className, double classProbability, [NotNull] string token, [NotNull] params string[] additionalTokens)
+        private static IDataSet BuildDataSet([NotNull] string className, double classProbability, [NotNull] string token, [NotNull] params string[] additionalTokens)
         {
             var @class = new StringClass(className, classProbability);
-            var dataSet = new DataSet<StringClass, StringToken>(@class);
+            var dataSet = new DataSet(@class);
 
             dataSet.AddToken(new StringToken(token));
             dataSet.AddToken(additionalTokens.Select(t => new StringToken(t)));

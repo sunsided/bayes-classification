@@ -12,17 +12,13 @@ namespace BayesianClassifier
     /// <summary>
     /// Class DataSet.
     /// </summary>
-    /// <typeparam name="TClass">The type of the class.</typeparam>
-    /// <typeparam name="TToken">The type of the tokens.</typeparam>
     [DebuggerDisplay("Data set for class P({Class.Name})={Class.Probability}")]
-    public sealed class DataSet<TClass, TToken> : IDataSet<TClass, TToken>
-        where TClass: IClass
-        where TToken: IToken
+    public sealed class DataSet : IDataSet
     {
         /// <summary>
         /// The token count
         /// </summary>
-        private readonly ConcurrentDictionary<TToken, long> _tokenCount = new ConcurrentDictionary<TToken, long>();
+        private readonly ConcurrentDictionary<IToken, long> _tokenCount = new ConcurrentDictionary<IToken, long>();
 
         /// <summary>
         /// The set size, i.e. the number of all tokens 
@@ -55,26 +51,26 @@ namespace BayesianClassifier
         /// </summary>
         /// <value>The class.</value>
         [NotNull]
-        public TClass Class { get; private set; }
+        public IClass Class { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataSet{TClass, TToken}"/> class.
+        /// Initializes a new instance of the <see cref="DataSet"/> class.
         /// </summary>
         /// <param name="class">The class.</param>
         /// <exception cref="System.ArgumentNullException">@class</exception>
-        public DataSet([NotNull] TClass @class)
+        public DataSet([NotNull] IClass @class)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
             Class = @class;
         }
 
         /// <summary>
-        /// Gets the <see cref="TokenInformation{TToken}" /> with the specified token.
+        /// Gets the <see cref="TokenInformation{IToken}" /> with the specified token.
         /// </summary>
         /// <param name="token">The token.</param>
-        /// <returns>TokenInformation&lt;TToken&gt;.</returns>
+        /// <returns>TokenInformation&lt;IToken&gt;.</returns>
         /// <exception cref="System.ArgumentNullException">token</exception>
-        public TokenInformation<TToken> this[TToken token]
+        public TokenInformation<IToken> this[IToken token]
         {
             get
             {
@@ -83,11 +79,11 @@ namespace BayesianClassifier
                 long count;
                 if (!_tokenCount.TryGetValue(token, out count))
                 {
-                    return new TokenInformation<TToken>(token, 0L, 0D);
+                    return new TokenInformation<IToken>(token, 0L, 0D);
                 }
 
                 var percentage = GetPercentage(count);
-                return new TokenInformation<TToken>(token, count, percentage);
+                return new TokenInformation<IToken>(token, count, percentage);
             }
         }
 
@@ -98,7 +94,7 @@ namespace BayesianClassifier
         /// <returns>System.Int64.</returns>
         /// <exception cref="System.ArgumentNullException">token</exception>
         /// <seealso cref="GetPercentage" />
-        public long GetCount([NotNull] TToken token)
+        public long GetCount([NotNull] IToken token)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
 
@@ -108,14 +104,14 @@ namespace BayesianClassifier
 
         /// <summary>
         /// Gets the approximated percentage of the given 
-        /// <see cref="TToken" /> in this data set
+        /// <see cref="IToken" /> in this data set
         /// by determining its occurrence count over the whole population.
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Double.</returns>
         /// <exception cref="System.ArgumentNullException">token</exception>
         /// <seealso cref="GetCount" />
-        public double GetPercentage([NotNull] TToken token)
+        public double GetPercentage([NotNull] IToken token)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
 
@@ -125,7 +121,7 @@ namespace BayesianClassifier
 
         /// <summary>
         /// Gets the approximated percentage of the given
-        /// <see cref="TToken" /> in this data set
+        /// <see cref="IToken" /> in this data set
         /// by determining its occurrence count over the whole population.
         /// </summary>
         /// <param name="tokenCount">The token count.</param>
@@ -151,12 +147,12 @@ namespace BayesianClassifier
         /// or
         /// additionalTokens
         /// </exception>
-        public void AddToken([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
+        public void AddToken([NotNull] IToken token, [NotNull] params IToken[] additionalTokens)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
             if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
 
-            _tokenCount.AddOrUpdate(token, AddFirstToken, IncrementTokenCount);
+            _tokenCount.AddOrUpdate(token, AddFirsIToken, IncremenITokenCount);
             Interlocked.Increment(ref _setSize);
 
             AddToken(additionalTokens);
@@ -168,13 +164,13 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="tokens">The tokens.</param>
         /// <exception cref="System.ArgumentNullException">tokens</exception>
-        public void AddToken([NotNull] IEnumerable<TToken> tokens)
+        public void AddToken([NotNull] IEnumerable<IToken> tokens)
         {
             if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
 
             foreach (var token in tokens)
             {
-                _tokenCount.AddOrUpdate(token, AddFirstToken, IncrementTokenCount);
+                _tokenCount.AddOrUpdate(token, AddFirsIToken, IncremenITokenCount);
                 Interlocked.Increment(ref _setSize);
             }
         }
@@ -190,8 +186,8 @@ namespace BayesianClassifier
         /// or
         /// additionalTokens
         /// </exception>
-        /// <seealso cref="PurgeToken(TToken,TToken[])"/>
-        public void RemoveTokenOnce([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
+        /// <seealso cref="PurgeToken(IToken,IToken[])"/>
+        public void RemoveTokenOnce([NotNull] IToken token, [NotNull] params IToken[] additionalTokens)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
             if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
@@ -206,8 +202,8 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="tokens">The tokens.</param>
         /// <exception cref="System.ArgumentNullException">tokens</exception>
-        /// <seealso cref="PurgeToken(IEnumerable&lt;TToken&gt;)"/>
-        public void RemoveTokenOnce([NotNull] IEnumerable<TToken> tokens)
+        /// <seealso cref="PurgeToken(IEnumerable&lt;IToken&gt;)"/>
+        public void RemoveTokenOnce([NotNull] IEnumerable<IToken> tokens)
         {
             if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
 
@@ -228,8 +224,8 @@ namespace BayesianClassifier
         /// or
         /// additionalTokens
         /// </exception>
-        /// <seealso cref="RemoveTokenOnce(TToken,TToken[])"/>
-        public void PurgeToken([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
+        /// <seealso cref="RemoveTokenOnce(IToken,IToken[])"/>
+        public void PurgeToken([NotNull] IToken token, [NotNull] params IToken[] additionalTokens)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
             if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
@@ -244,8 +240,8 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="tokens">The tokens.</param>
         /// <exception cref="System.ArgumentNullException">tokens</exception>
-        /// <seealso cref="RemoveTokenOnce(IEnumerable&lt;TToken&gt;)"/>
-        public void PurgeToken([NotNull] IEnumerable<TToken> tokens)
+        /// <seealso cref="RemoveTokenOnce(IEnumerable&lt;IToken&gt;)"/>
+        public void PurgeToken([NotNull] IEnumerable<IToken> tokens)
         {
             if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
 
@@ -259,7 +255,7 @@ namespace BayesianClassifier
         /// Removes the single token internally.
         /// </summary>
         /// <param name="token">The token.</param>
-        private void RemoveSingleTokenInternal([NotNull] TToken token)
+        private void RemoveSingleTokenInternal([NotNull] IToken token)
         {
             long count;
             while (_tokenCount.TryGetValue(token, out count))
@@ -272,8 +268,8 @@ namespace BayesianClassifier
                 if (newValue == 0)
                 {
                     // explicit removal if the count is zero
-                    var collection = _tokenCount as ICollection<KeyValuePair<TToken, long>>;
-                    collection.Remove(new KeyValuePair<TToken, long>(token, 0));
+                    var collection = _tokenCount as ICollection<KeyValuePair<IToken, long>>;
+                    collection.Remove(new KeyValuePair<IToken, long>(token, 0));
                 }
 
                 break;
@@ -284,7 +280,7 @@ namespace BayesianClassifier
         /// Purges a single token internally.
         /// </summary>
         /// <param name="token">The token.</param>
-        private void PurgeTokenInternal([NotNull] TToken token)
+        private void PurgeTokenInternal([NotNull] IToken token)
         {
             long count;
             if (!_tokenCount.TryRemove(token, out count)) return;
@@ -302,7 +298,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Int64.</returns>
-        private static long AddFirstToken(TToken token)
+        private static long AddFirsIToken(IToken token)
         {
             return 1;
         }
@@ -313,7 +309,7 @@ namespace BayesianClassifier
         /// <param name="token">The token.</param>
         /// <param name="count">The number of tokens.</param>
         /// <returns>System.Int64.</returns>
-        private static long IncrementTokenCount(TToken token, long count)
+        private static long IncremenITokenCount(IToken token, long count)
         {
             return count + 1;
         }
@@ -322,9 +318,9 @@ namespace BayesianClassifier
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
-        public IEnumerator<TokenCount<TToken>> GetEnumerator()
+        public IEnumerator<TokenCount> GetEnumerator()
         {
-            return _tokenCount.Select(token => new TokenCount<TToken>(token.Key, token.Value)).GetEnumerator();
+            return _tokenCount.Select(token => new TokenCount(token.Key, token.Value)).GetEnumerator();
         }
 
         /// <summary>

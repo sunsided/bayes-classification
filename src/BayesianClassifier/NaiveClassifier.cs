@@ -13,39 +13,35 @@ namespace BayesianClassifier
     /// Assumes that all token occurrences are statistically independent.
     /// </para>
     /// </summary>
-    /// <typeparam name="TClass">The type of the classes.</typeparam>
-    /// <typeparam name="TToken">The type of the tokens.</typeparam>
-    public sealed class NaiveClassifier<TClass, TToken>
-        where TClass: IClass
-        where TToken: IToken
+    public sealed class NaiveClassifier
     {
         /// <summary>
         /// The training sets
         /// </summary>
         [NotNull]
-        private readonly ITrainingSetAccessor<TClass, TToken> _trainingSets;
+        private readonly ITrainingSetAccessor _trainingSets;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="NaiveClassifier{TClass,TToken}"/> class.
+        /// Initializes a new instance of the <see cref="NaiveClassifier"/> class.
         /// </summary>
         /// <param name="trainingSets">The training sets.</param>
         /// <exception cref="System.ArgumentNullException">trainingSets</exception>
-        public NaiveClassifier([NotNull] ITrainingSetAccessor<TClass, TToken> trainingSets)
+        public NaiveClassifier([NotNull] ITrainingSetAccessor trainingSets)
         {
             if (ReferenceEquals(trainingSets, null)) throw new ArgumentNullException("trainingSets");
             _trainingSets = trainingSets;
         }
 
         /// <summary>
-        /// Calculates the probability of having the <see cref="TClass"/> 
-        /// given the occurrence of the <see cref="TToken"/>.
+        /// Calculates the probability of having the <see cref="IClass"/> 
+        /// given the occurrence of the <see cref="IToken"/>.
         /// </summary>
         /// <param name="classUnderTest">The class under test.</param>
         /// <param name="token">The token.</param>
         /// <returns>System.Double.</returns>
-        public double CalculateProbability([NotNull] TClass classUnderTest, [NotNull] TToken token)
+        public double CalculateProbability([NotNull] IClass classUnderTest, [NotNull] IToken token)
         {
-            ICollection<IDataSetAccessor<TClass, TToken>> remainingSets;
+            ICollection<IDataSetAccessor> remainingSets;
             var setForClassUnderTest = SplitDataSets(classUnderTest, out remainingSets);
 
             // calculate the token's probability in the class under test
@@ -66,14 +62,14 @@ namespace BayesianClassifier
         
         /// <summary>
         /// Calculates the probability of having the 
-        /// <see cref="TClass" />
+        /// <see cref="IClass" />
         /// given the occurrence of the 
-        /// <see cref="TToken" />.
+        /// <see cref="IToken" />.
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Double.</returns>
         [NotNull]
-        public IEnumerable<ConditionalProbability<TClass, TToken>> CalculateProbabilities([NotNull] TToken token)
+        public IEnumerable<ConditionalProbability> CalculateProbabilities([NotNull] IToken token)
         {
             // calculate the token's probabilities for all classes
             double totalProbability;
@@ -83,7 +79,7 @@ namespace BayesianClassifier
             var inverseOfTotalProbability = 1.0D/totalProbability;
             return from cp in probabilities
                    let conditionalProbability = cp.Probability * inverseOfTotalProbability
-                   select new ConditionalProbability<TClass, TToken>(cp.Class, cp.Token, conditionalProbability);
+                   select new ConditionalProbability(cp.Class, cp.Token, conditionalProbability);
         }
 
         /// <summary>
@@ -91,16 +87,16 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <param name="sets">The sets.</param>
-        /// <returns>IEnumerable&lt;ConditionalProbability&lt;TClass, TToken&gt;&gt;.</returns>
+        /// <returns>IEnumerable&lt;ConditionalProbability&lt;IClass, IToken&gt;&gt;.</returns>
         [NotNull]
-        private IEnumerable<ConditionalProbability<TClass, TToken>> CalculateTokenProbabilityGivenClass([NotNull] TToken token, [NotNull] IEnumerable<IDataSetAccessor<TClass, TToken>> sets)
+        private IEnumerable<ConditionalProbability> CalculateTokenProbabilityGivenClass([NotNull] IToken token, [NotNull] IEnumerable<IDataSetAccessor> sets)
         {
             return from set in sets
                    let @class = set.Class
                    let classProbability = @class.Probability
                    let percentageInClass = set.GetPercentage(token)
                    let probabilityInClass = percentageInClass * classProbability
-                   select new ConditionalProbability<TClass, TToken>(@class, token, probabilityInClass);
+                   select new ConditionalProbability(@class, token, probabilityInClass);
         }
 
         /// <summary>
@@ -109,9 +105,9 @@ namespace BayesianClassifier
         /// <param name="token">The token.</param>
         /// <param name="sets">The sets.</param>
         /// <param name="totalProbability">The total probability for the given classes.</param>
-        /// <returns>IEnumerable&lt;ConditionalProbability&lt;TClass, TToken&gt;&gt;.</returns>
+        /// <returns>IEnumerable&lt;ConditionalProbability&lt;IClass, IToken&gt;&gt;.</returns>
         [NotNull]
-        private IEnumerable<ConditionalProbability<TClass, TToken>> CalculateTokenProbabilityGivenClass([NotNull] TToken token, [NotNull] IEnumerable<IDataSetAccessor<TClass, TToken>> sets, out double totalProbability)
+        private IEnumerable<ConditionalProbability> CalculateTokenProbabilityGivenClass([NotNull] IToken token, [NotNull] IEnumerable<IDataSetAccessor> sets, out double totalProbability)
         {
             var probabilities = CalculateTokenProbabilityGivenClass(token, sets).ToCollection();
             totalProbability = probabilities.Sum(p => p.Probability);
@@ -123,12 +119,12 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="classUnderTest">The class under test.</param>
         /// <param name="remainingSets">The remaining sets.</param>
-        /// <returns>IDataSet&lt;TClass, TToken&gt;.</returns>
+        /// <returns>IDataSet&lt;IClass, IToken&gt;.</returns>
         [NotNull]
-        private IDataSetAccessor<TClass, TToken> SplitDataSets(TClass classUnderTest, [NotNull] out ICollection<IDataSetAccessor<TClass, TToken>> remainingSets)
+        private IDataSetAccessor SplitDataSets([NotNull] IClass classUnderTest, [NotNull] out ICollection<IDataSetAccessor> remainingSets)
         {
-            IDataSet<TClass, TToken> setForClassUnderTest = null;
-            remainingSets = new Collection<IDataSetAccessor<TClass, TToken>>();
+            IDataSet setForClassUnderTest = null;
+            remainingSets = new Collection<IDataSetAccessor>();
 
             // split data sets by selected class and other classes
             foreach (var trainingSet in _trainingSets)
@@ -147,7 +143,7 @@ namespace BayesianClassifier
             }
 
             // return the found set or an empty set
-            return setForClassUnderTest ?? new EmptyDataSet<TClass, TToken>(classUnderTest);
+            return setForClassUnderTest ?? new EmptyDataSet(classUnderTest);
         }
     }
 }

@@ -8,19 +8,17 @@ namespace BayesianClassifier
     /// Struct ConditionalProbability
     /// </summary>
     [DebuggerDisplay("P({Class}|{Token})={Probability}")]
-    public struct ConditionalProbability<TClass, TToken> : IEquatable<ConditionalProbability<TClass, TToken>>
-        where TClass : IClass
-        where TToken : IToken
+    public struct ConditionalProbability : IEquatable<ConditionalProbability>
     {
         /// <summary>
         /// The class
         /// </summary>
-        public readonly TClass Class;
+        public readonly IClass Class;
 
         /// <summary>
         /// The token
         /// </summary>
-        public readonly TToken Token;
+        public readonly IToken Token;
 
         /// <summary>
         /// The conditional probability
@@ -28,7 +26,7 @@ namespace BayesianClassifier
         public readonly double Probability;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConditionalProbability{TClass, TToken}" /> struct.
+        /// Initializes a new instance of the <see cref="ConditionalProbability" /> struct.
         /// </summary>
         /// <param name="class">The class.</param>
         /// <param name="token">The token.</param>
@@ -43,9 +41,9 @@ namespace BayesianClassifier
         /// or
         /// probability;Probability must less than or equal to one
         /// </exception>
-        public ConditionalProbability([NotNull] TClass @class, [NotNull] TToken token, double probability)
+        public ConditionalProbability([NotNull] IClass @class, [NotNull] IToken token, double probability)
         {
-            if (ReferenceEquals(@class, null)) throw new ArgumentNullException("@class");
+            if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
             if (probability < 0) throw new ArgumentOutOfRangeException("probability", probability, "Probability must greater than or equal to zero");
             if (probability > 1) throw new ArgumentOutOfRangeException("probability", probability, "Probability must less than or equal to one");
@@ -63,7 +61,7 @@ namespace BayesianClassifier
         public override bool Equals([CanBeNull] object obj)
         {
             if (ReferenceEquals(obj, null)) return false;
-            return obj is ConditionalProbability<TClass, TToken> && Equals((ConditionalProbability<TClass, TToken>) obj);
+            return obj is ConditionalProbability && Equals((ConditionalProbability) obj);
         }
 
         /// <summary>
@@ -71,7 +69,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="other">An object to compare with this object.</param>
         /// <returns>true if the current object is equal to the <paramref name="other" /> parameter; otherwise, false.</returns>
-        public bool Equals(ConditionalProbability<TClass, TToken> other)
+        public bool Equals(ConditionalProbability other)
         {
             return Class.Equals(other.Class)
                    && Token.Equals(other.Token)
