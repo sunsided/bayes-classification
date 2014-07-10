@@ -50,8 +50,9 @@ namespace BayesianClassifier
         /// Gets the <see cref="TokenInformation{IToken}"/> with the specified token.
         /// </summary>
         /// <param name="token">The token.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
         /// <returns>TokenInformation&lt;IToken&gt;.</returns>
-        public TokenInformation<IToken> this[IToken token]
+        public TokenInformation<IToken> this[IToken token, double alpha = 0D]
         {
             get { return new TokenInformation<IToken>(token, 0L, 0D); }
         }
@@ -81,8 +82,10 @@ namespace BayesianClassifier
         /// Gets the percentage.
         /// </summary>
         /// <param name="token">The token.</param>
+        /// <param name="alpha">The alpha.</param>
         /// <returns>System.Double.</returns>
-        public double GetPercentage(IToken token)
+        /// <seealso cref="GetCount" />
+        public double GetPercentage(IToken token, double alpha = 0)
         {
             return 0D;
         }

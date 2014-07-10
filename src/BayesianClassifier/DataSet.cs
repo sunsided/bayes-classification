@@ -16,6 +16,11 @@ namespace BayesianClassifier
     public sealed class DataSet : IDataSet
     {
         /// <summary>
+        /// The default smoothing alpha
+        /// </summary>
+        public const double DefaultSmoothingAlpha = 0D;
+
+        /// <summary>
         /// The token count
         /// </summary>
         private readonly ConcurrentDictionary<IToken, long> _tokenCount = new ConcurrentDictionary<IToken, long>();
@@ -68,9 +73,10 @@ namespace BayesianClassifier
         /// Gets the <see cref="TokenInformation{IToken}" /> with the specified token.
         /// </summary>
         /// <param name="token">The token.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
         /// <returns>TokenInformation&lt;IToken&gt;.</returns>
         /// <exception cref="System.ArgumentNullException">token</exception>
-        public TokenInformation<IToken> this[IToken token]
+        public TokenInformation<IToken> this[IToken token, double alpha = DefaultSmoothingAlpha]
         {
             get
             {
@@ -82,7 +88,7 @@ namespace BayesianClassifier
                     return new TokenInformation<IToken>(token, 0L, 0D);
                 }
 
-                var percentage = GetPercentage(count);
+                var percentage = GetPercentage(count, alpha);
                 return new TokenInformation<IToken>(token, count, percentage);
             }
         }
@@ -92,7 +98,6 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Int64.</returns>
-        /// <exception cref="System.ArgumentNullException">token</exception>
         /// <seealso cref="GetPercentage" />
         public long GetCount([NotNull] IToken token)
         {
@@ -108,15 +113,17 @@ namespace BayesianClassifier
         /// by determining its occurrence count over the whole population.
         /// </summary>
         /// <param name="token">The token.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
         /// <returns>System.Double.</returns>
         /// <exception cref="System.ArgumentNullException">token</exception>
         /// <seealso cref="GetCount" />
-        public double GetPercentage([NotNull] IToken token)
+        public double GetPercentage([NotNull] IToken token, double alpha = DefaultSmoothingAlpha)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+            if (alpha < 0) throw new ArgumentOutOfRangeException("alpha", alpha, "Smoothing parameter alpha must be greater than or equal to zero.");
 
             var count = GetCount(token);
-            return GetPercentage(count);
+            return GetPercentage(count, alpha);
         }
 
         /// <summary>
@@ -125,15 +132,19 @@ namespace BayesianClassifier
         /// by determining its occurrence count over the whole population.
         /// </summary>
         /// <param name="tokenCount">The token count.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
         /// <returns>System.Double.</returns>
         /// <exception cref="System.ArgumentNullException">token</exception>
         /// <seealso cref="GetCount" />
-        private double GetPercentage(long tokenCount)
+        private double GetPercentage(long tokenCount, double alpha = DefaultSmoothingAlpha)
         {
+            Debug.Assert(alpha >= 0, "alpha >= 0");
             Debug.Assert(tokenCount >= 0, "tokenCount >= 0");
 
             var totalCount = _setSize; // TODO: cache inverse set size
-            return (double)tokenCount / totalCount;
+            var vocabularySize = TokenCount;
+
+            return (tokenCount + alpha)/(totalCount + alpha*vocabularySize);
         }
 
         /// <summary>

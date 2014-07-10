@@ -46,7 +46,13 @@ namespace BayesianClassifierTests
         [NotNull]
         private NaiveClassifier BuildClassifier([NotNull] ITrainingSetAccessor trainingSet)
         {
-            return new NaiveClassifier(trainingSet);
+            var classifier = new NaiveClassifier(trainingSet)
+            {
+                // disable smoothing for exact probabilities
+                SmoothingAlpha = 0.0D
+            };
+
+            return classifier;
         }
 
         /// <summary>
@@ -119,6 +125,7 @@ namespace BayesianClassifierTests
         public void CalculateProbabilityReturnsOneHundredPercentForAKnownSpamWord()
         {
             var token = new StringToken("rolex");
+
             var probability = _classifier.CalculateProbability(_spamClass, token);
             probability.Should().BeApproximately(1.0D, 0.0001D, "because the word is known the be a spam word");
         }
@@ -127,6 +134,7 @@ namespace BayesianClassifierTests
         public void CalculateProbabilityReturnsOneHundredPercentForAKnownHamWord()
         {
             var token = new StringToken("unicorn");
+
             var probability = _classifier.CalculateProbability(_hamClass, token);
             probability.Should().BeApproximately(1.0D, 0.0001D, "because the word is known the be a ham word");
         }
@@ -135,6 +143,7 @@ namespace BayesianClassifierTests
         public void CalculateProbabilitiesWithHamWordReturnsProbabilitiesForAllClasses()
         {
             var token = new StringToken("unicorn");
+
             var probabilities = _classifier.CalculateProbabilities(token).ToList();
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
@@ -149,6 +158,7 @@ namespace BayesianClassifierTests
         public void CalculateProbabilitiesWithMixedWordReturnsProbabilitiesForAllClasses()
         {
             var token = new StringToken("money");
+
             var probabilities = _classifier.CalculateProbabilities(token).ToList();
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
@@ -163,6 +173,7 @@ namespace BayesianClassifierTests
         public void CalculateProbabilitiesWithMixedWordThatIsMoreLikelyHamThanSpamReturnsProbabilitiesForAllClasses()
         {
             var token = new StringToken("send");
+
             var probabilities = _classifier.CalculateProbabilities(token).ToList();
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
@@ -174,19 +185,41 @@ namespace BayesianClassifierTests
         }
 
         [Test]
-        public void CalculateProbabilitiesWithMultipleTokens()
+        public void CalculateProbabilitiesWithRareTokensAndSmoothingAlphaIsUnambiguous()
         {
             var token1 = new StringToken("rolex");
             var token2 = new StringToken("unicorn");
-            var probabilities = _classifier.CalculateProbabilities(new IToken[] {token1, token2}).ToList();
+            var token3 = new StringToken("send");
+
+            const double smoothingAlpha = 1.0D;
+            var probabilities = _classifier.CalculateProbabilities(new IToken[] {token1, token2, token3}, smoothingAlpha).ToList();
             
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
-                .BeApproximately(1 / 3D, 0.000001, "because the token is more likely to be a ham than spam word");
+                .BeLessThan(0.5, "because we used more ham than spam tokens");
 
             probabilities.Single(p => p.Class.Equals(_hamClass))
                 .Probability.Should()
-                .BeApproximately(2 / 3D, 0.000001, "because the token is more likely to be a ham than spam word");
+                .BeGreaterThan(0.5, "because we used more ham than spam tokens");
+        }
+
+        [Test]
+        public void CalculateProbabilitiesWithRareTokensWithoutSmoothingAlphaIsAmbiguous()
+        {
+            var token1 = new StringToken("rolex");
+            var token2 = new StringToken("unicorn");
+            var token3 = new StringToken("send");
+
+            const double smoothingAlpha = 0D;
+            var probabilities = _classifier.CalculateProbabilities(new IToken[] { token1, token2, token3 }, smoothingAlpha).ToList();
+
+            probabilities.Single(p => p.Class.Equals(_spamClass))
+                .Probability.Should()
+                .BeApproximately(0, 0.0001D, "because the rare words cancel out the probabilities");
+
+            probabilities.Single(p => p.Class.Equals(_hamClass))
+                .Probability.Should()
+                .BeApproximately(0, 0.0001D, "because the rare words cancel out the probabilities");
         }
     }
 }
