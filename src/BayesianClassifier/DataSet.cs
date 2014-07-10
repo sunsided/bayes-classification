@@ -1,0 +1,194 @@
+﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
+using JetBrains.Annotations;
+
+namespace BayesianClassifier
+{
+    /// <summary>
+    /// Class DataSet.
+    /// </summary>
+    /// <typeparam name="TClass">The type of the class.</typeparam>
+    /// <typeparam name="TToken">The type of the tokens.</typeparam>
+    [DebuggerDisplay("Data set for class {Class}")]
+    public sealed class DataSet<TClass, TToken> : IEnumerable<TokenCount<TToken>> 
+        where TClass: IClass
+        where TToken: IToken
+    {
+        /// <summary>
+        /// The token count
+        /// </summary>
+        private readonly ConcurrentDictionary<TToken, long> _tokenCount = new ConcurrentDictionary<TToken, long>();
+
+        /// <summary>
+        /// The set size, i.e. the number of all tokens 
+        /// </summary>
+        private long _setSize;
+
+        /// <summary>
+        /// Gets the number of distinct tokens, 
+        /// i.e. every token counted at exactly once.
+        /// </summary>
+        /// <value>The token count.</value>
+        /// <seealso cref="SetSize"/>
+        public long TokenCount
+        {
+            get { return _tokenCount.Count; }
+        }
+
+        /// <summary>
+        /// Gets the size of the set.
+        /// </summary>
+        /// <value>The size of the set.</value>
+        /// <seealso cref="TokenCount"/>
+        public long SetSize
+        {
+            get { return _setSize; }
+        }
+
+        /// <summary>
+        /// Gets the class.
+        /// </summary>
+        /// <value>The class.</value>
+        [NotNull]
+        public TClass Class { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DataSet{TClass, TToken}"/> class.
+        /// </summary>
+        /// <param name="class">The class.</param>
+        /// <exception cref="System.ArgumentNullException">@class</exception>
+        public DataSet([NotNull] TClass @class)
+        {
+            if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
+            Class = @class;
+        }
+
+        /// <summary>
+        /// Adds the given tokens a single time, incrementing the <see cref="SetSize"/>
+        /// and, at the first addition, the <see cref="TokenCount"/>.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="additionalTokens">The additional tokens.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// token
+        /// or
+        /// additionalTokens
+        /// </exception>
+        public void AddToken([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
+        {
+            if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+            if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
+
+            _tokenCount.AddOrUpdate(token, AddFirstToken, IncrementTokenCount);
+            Interlocked.Increment(ref _setSize);
+
+            AddToken(additionalTokens);
+        }
+
+        /// <summary>
+        /// Adds the given tokens a single time, incrementing the <see cref="SetSize"/>
+        /// and, at the first addition, the <see cref="TokenCount"/>.
+        /// </summary>
+        /// <param name="tokens">The tokens.</param>
+        /// <exception cref="System.ArgumentNullException">tokens</exception>
+        public void AddToken([NotNull] IEnumerable<TToken> tokens)
+        {
+            if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
+
+            foreach (var token in tokens)
+            {
+                _tokenCount.AddOrUpdate(token, AddFirstToken, IncrementTokenCount);
+                Interlocked.Increment(ref _setSize);
+            }
+        }
+
+        /// <summary>
+        /// Removes the given tokens a single time, decrementing the <see cref="SetSize"/> and,
+        /// eventually, the <see cref="TokenCount"/>.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="additionalTokens">The additional tokens.</param>
+        /// <exception cref="System.ArgumentNullException">
+        /// token
+        /// or
+        /// additionalTokens
+        /// </exception>
+        public void RemoveToken([NotNull] TToken token, [NotNull] params TToken[] additionalTokens)
+        {
+            if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+            if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
+
+            long ignoredCount;
+            if (_tokenCount.TryRemove(token, out ignoredCount))
+            {
+                Interlocked.Decrement(ref _setSize);
+            }
+
+            RemoveToken(additionalTokens);
+        }
+
+        /// <summary>
+        /// Removes the given tokens a single time, decrementing the <see cref="SetSize"/> and,
+        /// eventually, the <see cref="TokenCount"/>.
+        /// </summary>
+        /// <param name="tokens">The tokens.</param>
+        /// <exception cref="System.ArgumentNullException">tokens</exception>
+        public void RemoveToken([NotNull] IEnumerable<TToken> tokens)
+        {
+            if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
+
+            foreach (var token in tokens)
+            {
+                long ignoredCount;
+                if (_tokenCount.TryRemove(token, out ignoredCount))
+                {
+                    Interlocked.Decrement(ref _setSize);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Factory to initialize the value in <see cref="_tokenCount"/> for the given <paramref name="token"/>.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns>System.Int64.</returns>
+        private long AddFirstToken(TToken token)
+        {
+            return 1;
+        }
+
+        /// <summary>
+        /// Factory to increment the value in <see cref="_tokenCount"/> for the given <paramref name="token"/>.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="count">The number of tokens.</param>
+        /// <returns>System.Int64.</returns>
+        private long IncrementTokenCount(TToken token, long count)
+        {
+            return count + 1;
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
+        public IEnumerator<TokenCount<TToken>> GetEnumerator()
+        {
+            return _tokenCount.Select(token => new TokenCount<TToken>(token.Key, token.Value)).GetEnumerator();
+        }
+
+        /// <summary>
+        /// Returns an enumerator that iterates through a collection.
+        /// </summary>
+        /// <returns>An <see cref="T:System.Collections.IEnumerator" /> object that can be used to iterate through the collection.</returns>
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+}
