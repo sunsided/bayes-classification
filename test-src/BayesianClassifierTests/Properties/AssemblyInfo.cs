@@ -1,16 +1,15 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("BayesianClassifierTests")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Bayesian Classifier Experiments: Unit Tests")]
+[assembly: AssemblyDescription("Test Library for the Bayesian Classifier Experiments")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("BayesianClassifierTests")]
-[assembly: AssemblyCopyright("Copyright ©  2014")]
+[assembly: AssemblyProduct("BayesianClassifier")]
+[assembly: AssemblyCopyright("Copyright © Markus Mayer 2014")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
