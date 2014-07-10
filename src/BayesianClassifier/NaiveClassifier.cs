@@ -8,11 +8,14 @@ using JetBrains.Annotations;
 namespace BayesianClassifier
 {
     /// <summary>
-    /// Class Classifier. This class cannot be inherited.
+    /// Class NaiveClassifier. This class cannot be inherited.
+    /// <para>
+    /// Assumes that all token occurrences are statistically independent.
+    /// </para>
     /// </summary>
     /// <typeparam name="TClass">The type of the classes.</typeparam>
     /// <typeparam name="TToken">The type of the tokens.</typeparam>
-    public sealed class Classifier<TClass, TToken>
+    public sealed class NaiveClassifier<TClass, TToken>
         where TClass: IClass
         where TToken: IToken
     {
@@ -23,11 +26,11 @@ namespace BayesianClassifier
         private readonly ITrainingSetAccessor<TClass, TToken> _trainingSets;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Classifier{TClass, TToken}"/> class.
+        /// Initializes a new instance of the <see cref="NaiveClassifier{TClass,TToken}"/> class.
         /// </summary>
         /// <param name="trainingSets">The training sets.</param>
         /// <exception cref="System.ArgumentNullException">trainingSets</exception>
-        public Classifier([NotNull] ITrainingSetAccessor<TClass, TToken> trainingSets)
+        public NaiveClassifier([NotNull] ITrainingSetAccessor<TClass, TToken> trainingSets)
         {
             if (ReferenceEquals(trainingSets, null)) throw new ArgumentNullException("trainingSets");
             _trainingSets = trainingSets;
@@ -50,13 +53,8 @@ namespace BayesianClassifier
             var probabilityInClassUnderTest = percentageInClassUnderTest * classUnderTest.Probability;
 
             // calculate the token's probabilities for the remaining classes
-            var remainingProbabilities =
-                from set in remainingSets
-                let @class = set.Class
-                let classProbability = @class.Probability
-                let percentageInClass = set.GetPercentage(token)
-                select percentageInClass*classProbability;
-            var sumOfRemainingProbabilites = remainingProbabilities.Sum();
+            double sumOfRemainingProbabilites;
+            CalculateTokenProbabilityGivenClass(token, remainingSets, out sumOfRemainingProbabilites);
 
             // calculate total probability
             var totalProbability = probabilityInClassUnderTest + sumOfRemainingProbabilites;
@@ -65,7 +63,7 @@ namespace BayesianClassifier
             var probabilityForClass = probabilityInClassUnderTest/totalProbability;
             return probabilityForClass;
         }
-
+        
         /// <summary>
         /// Calculates the probability of having the 
         /// <see cref="TClass" />
@@ -77,25 +75,47 @@ namespace BayesianClassifier
         [NotNull]
         public IEnumerable<ConditionalProbability<TClass, TToken>> CalculateProbabilities([NotNull] TToken token)
         {
-            // calculate the token's probabilities for the remaining classes
-            var probabilities =
-                (
-                    from set in _trainingSets
-                    let @class = set.Class
-                    let classProbability = @class.Probability
-                    let percentageInClass = set.GetPercentage(token)
-                    let probabilityInClass = percentageInClass*classProbability
-                    select new ConditionalProbability<TClass, TToken>(@class, token, probabilityInClass)
-                )
-                .ToList();
+            // calculate the token's probabilities for all classes
+            double totalProbability;
+            var probabilities = CalculateTokenProbabilityGivenClass(token, _trainingSets, out totalProbability);
 
-            // calculate the total probabilities
-            var totalProbability = probabilities.Sum(p => p.Probability);
+            // apply Bayes theorem
             var inverseOfTotalProbability = 1.0D/totalProbability;
-
             return from cp in probabilities
                    let conditionalProbability = cp.Probability * inverseOfTotalProbability
                    select new ConditionalProbability<TClass, TToken>(cp.Class, cp.Token, conditionalProbability);
+        }
+
+        /// <summary>
+        /// Calculates the token probabilities given a class.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="sets">The sets.</param>
+        /// <returns>IEnumerable&lt;ConditionalProbability&lt;TClass, TToken&gt;&gt;.</returns>
+        [NotNull]
+        private IEnumerable<ConditionalProbability<TClass, TToken>> CalculateTokenProbabilityGivenClass([NotNull] TToken token, [NotNull] IEnumerable<IDataSetAccessor<TClass, TToken>> sets)
+        {
+            return from set in sets
+                   let @class = set.Class
+                   let classProbability = @class.Probability
+                   let percentageInClass = set.GetPercentage(token)
+                   let probabilityInClass = percentageInClass * classProbability
+                   select new ConditionalProbability<TClass, TToken>(@class, token, probabilityInClass);
+        }
+
+        /// <summary>
+        /// Calculates the token probabilities given a class.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="sets">The sets.</param>
+        /// <param name="totalProbability">The total probability for the given classes.</param>
+        /// <returns>IEnumerable&lt;ConditionalProbability&lt;TClass, TToken&gt;&gt;.</returns>
+        [NotNull]
+        private IEnumerable<ConditionalProbability<TClass, TToken>> CalculateTokenProbabilityGivenClass([NotNull] TToken token, [NotNull] IEnumerable<IDataSetAccessor<TClass, TToken>> sets, out double totalProbability)
+        {
+            var probabilities = CalculateTokenProbabilityGivenClass(token, sets).ToCollection();
+            totalProbability = probabilities.Sum(p => p.Probability);
+            return probabilities;
         }
 
         /// <summary>
