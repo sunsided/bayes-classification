@@ -43,13 +43,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IDataSetAccessor.cs" />
     <Compile Include="DataSet.cs" />
     <Compile Include="IClass.cs" />
+    <Compile Include="IDataSet.cs" />
     <Compile Include="IToken.cs" />
+    <Compile Include="ITokenRegistration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringClass.cs" />
     <Compile Include="StringToken.cs" />
     <Compile Include="TokenCount.cs" />
+    <Compile Include="TokenInformation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

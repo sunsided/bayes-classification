@@ -193,5 +193,58 @@ namespace BayesianClassifierTests
                 .Should()
                 .Be(1, "because one instance of that token was added");
         }
+
+        [Test]
+        public void GetCountReturnsTheCorrectCountPerToken()
+        {
+            var token1 = new StringToken("foo");
+            var token2 = new StringToken("foo");
+            var token3 = new StringToken("bar");
+            _dataSet.AddToken(token1, token2, token3);
+
+            _dataSet.GetCount(token1).Should().Be(2, "because we added that token twice");
+            _dataSet.GetCount(token3).Should().Be(1, "because we added that token once");
+        }
+
+        [Test]
+        public void GetPercentageReturnsTheCorrectPercentagePerToken()
+        {
+            var token1 = new StringToken("foo");
+            var token2 = new StringToken("foo");
+            var token3 = new StringToken("bar");
+            _dataSet.AddToken(token1, token2, token3);
+
+            _dataSet.GetPercentage(token1)
+                .Should()
+                .BeApproximately(2/3D, 0.0001, "because we added that token twice out of three tokens");
+            _dataSet.GetPercentage(token3)
+                .Should()
+                .BeApproximately(1/3D, 0.0001, "because we added that token once out of three tokens");
+        }
+
+        [Test]
+        public void IndexerReturnsTheCorrectTokenInformation()
+        {
+            var token1 = new StringToken("foo");
+            var token2 = new StringToken("foo");
+            var token3 = new StringToken("bar");
+            _dataSet.AddToken(token1, token2, token3);
+
+            _dataSet[token1].Count
+                .Should()
+                .Be(2, "because we added that token twice out of three tokens");
+
+            _dataSet[token1].Percentage
+                .Should()
+                .BeApproximately(2 / 3D, 0.0001, "because we added that token twice out of three tokens");
+
+            _dataSet[token3].Count
+                .Should()
+                .Be(1, "because we added that token once out of three tokens");
+
+            _dataSet[token3].Percentage
+                .Should()
+                .BeApproximately(1 / 3D, 0.0001, "because we added that token once out of three tokens");
+        }
     }
 }

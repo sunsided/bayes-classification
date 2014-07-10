@@ -15,7 +15,7 @@ namespace BayesianClassifier
     /// <typeparam name="TClass">The type of the class.</typeparam>
     /// <typeparam name="TToken">The type of the tokens.</typeparam>
     [DebuggerDisplay("Data set for class {Class}")]
-    public sealed class DataSet<TClass, TToken> : IEnumerable<TokenCount<TToken>> 
+    public sealed class DataSet<TClass, TToken> : IDataSet<TClass, TToken>
         where TClass: IClass
         where TToken: IToken
     {
@@ -66,6 +66,78 @@ namespace BayesianClassifier
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
             Class = @class;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="TokenInformation{TToken}" /> with the specified token.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns>TokenInformation&lt;TToken&gt;.</returns>
+        /// <exception cref="System.ArgumentNullException">token</exception>
+        public TokenInformation<TToken> this[TToken token]
+        {
+            get
+            {
+                if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+
+                long count;
+                if (!_tokenCount.TryGetValue(token, out count))
+                {
+                    return new TokenInformation<TToken>(token, 0L, 0D);
+                }
+
+                var percentage = GetPercentage(count);
+                return new TokenInformation<TToken>(token, count, percentage);
+            }
+        }
+
+        /// <summary>
+        /// Gets the number of occurrences of the given token.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns>System.Int64.</returns>
+        /// <exception cref="System.ArgumentNullException">token</exception>
+        /// <seealso cref="GetPercentage" />
+        public long GetCount([NotNull] TToken token)
+        {
+            if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+
+            long count;
+            return !_tokenCount.TryGetValue(token, out count) ? 0 : count;
+        }
+
+        /// <summary>
+        /// Gets the approximated percentage of the given 
+        /// <see cref="TToken" /> in this data set
+        /// by determining its occurrence count over the whole population.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <returns>System.Double.</returns>
+        /// <exception cref="System.ArgumentNullException">token</exception>
+        /// <seealso cref="GetCount" />
+        public double GetPercentage([NotNull] TToken token)
+        {
+            if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+
+            var count = GetCount(token);
+            return GetPercentage(count);
+        }
+
+        /// <summary>
+        /// Gets the approximated percentage of the given
+        /// <see cref="TToken" /> in this data set
+        /// by determining its occurrence count over the whole population.
+        /// </summary>
+        /// <param name="tokenCount">The token count.</param>
+        /// <returns>System.Double.</returns>
+        /// <exception cref="System.ArgumentNullException">token</exception>
+        /// <seealso cref="GetCount" />
+        private double GetPercentage(long tokenCount)
+        {
+            Debug.Assert(tokenCount >= 0, "tokenCount >= 0");
+
+            var totalCount = _setSize; // TODO: cache inverse set size
+            return (double)tokenCount / totalCount;
         }
 
         /// <summary>
@@ -215,14 +287,13 @@ namespace BayesianClassifier
         private void PurgeTokenInternal([NotNull] TToken token)
         {
             long count;
-            if (_tokenCount.TryRemove(token, out count))
+            if (!_tokenCount.TryRemove(token, out count)) return;
+
+            // decrement 'count' times
+            // TODO: use Interlocked.CompareExchange
+            for (int i = 0; i < count; ++i)
             {
-                // decrement 'count' times
-                // TODO: use Interlocked.CompareExchange
-                for (int i = 0; i < count; ++i)
-                {
-                    Interlocked.Decrement(ref _setSize);
-                }
+                Interlocked.Decrement(ref _setSize);
             }
         }
 
@@ -231,7 +302,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Int64.</returns>
-        private long AddFirstToken(TToken token)
+        private static long AddFirstToken(TToken token)
         {
             return 1;
         }
@@ -242,7 +313,7 @@ namespace BayesianClassifier
         /// <param name="token">The token.</param>
         /// <param name="count">The number of tokens.</param>
         /// <returns>System.Int64.</returns>
-        private long IncrementTokenCount(TToken token, long count)
+        private static long IncrementTokenCount(TToken token, long count)
         {
             return count + 1;
         }
