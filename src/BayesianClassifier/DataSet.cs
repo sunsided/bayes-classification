@@ -14,7 +14,7 @@ namespace BayesianClassifier
     /// </summary>
     /// <typeparam name="TClass">The type of the class.</typeparam>
     /// <typeparam name="TToken">The type of the tokens.</typeparam>
-    [DebuggerDisplay("Data set for class {Class}")]
+    [DebuggerDisplay("Data set for class P({Class.Name})={Class.Probability}")]
     public sealed class DataSet<TClass, TToken> : IDataSet<TClass, TToken>
         where TClass: IClass
         where TToken: IToken
