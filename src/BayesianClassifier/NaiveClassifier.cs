@@ -83,6 +83,48 @@ namespace BayesianClassifier
         }
 
         /// <summary>
+        /// Calculates the probability of having the
+        /// <see cref="IClass" />
+        /// given the occurrence of the
+        /// <see cref="IToken" />.
+        /// </summary>
+        /// <param name="tokens">The tokens.</param>
+        /// <returns>System.Double.</returns>
+        [NotNull]
+        public IEnumerable<GroupedConditionalProbability> CalculateProbabilities([NotNull] ICollection<IToken> tokens)
+        {
+            var probabilitiesForTokens = tokens.SelectMany(CalculateProbabilities);
+            var groupedByClass = probabilitiesForTokens.GroupBy(cp => cp.Class);
+
+            foreach (var group in groupedByClass)
+            {
+                var @class = group.Key;
+
+                // combine individual probabilities
+                var productOfProbabilities = 1D;
+                var productOfOneMinusProbabilities = 1D;
+                var probabilities = group.ToCollection();
+                foreach (var cp in group)
+                {
+                    var conditionalProbability = cp.Probability;
+
+                    // skip zero probabilities
+                    // if (Math.Abs(conditionalProbability) < 0.000001D) continue;
+
+                    // aggregate
+                    productOfProbabilities *= conditionalProbability;
+                    productOfOneMinusProbabilities *= (1 - conditionalProbability);
+                }
+
+                // combine probabilities
+                // TODO: naive approach using Grahams formula
+                var probabilityOfClassGivenTokens = productOfProbabilities/
+                                                    (productOfProbabilities + productOfOneMinusProbabilities);
+                yield return new GroupedConditionalProbability(@class, probabilityOfClassGivenTokens, probabilities);
+            }
+        }
+
+        /// <summary>
         /// Calculates the token probabilities given a class.
         /// </summary>
         /// <param name="token">The token.</param>
@@ -98,7 +140,7 @@ namespace BayesianClassifier
                    let probabilityInClass = percentageInClass * classProbability
                    select new ConditionalProbability(@class, token, probabilityInClass);
         }
-
+        
         /// <summary>
         /// Calculates the token probabilities given a class.
         /// </summary>

@@ -172,5 +172,21 @@ namespace BayesianClassifierTests
                 .Probability.Should()
                 .BeApproximately(2/3D, 0.000001, "because the token is more likely to be a ham than spam word");
         }
+
+        [Test]
+        public void CalculateProbabilitiesWithMultipleTokens()
+        {
+            var token1 = new StringToken("rolex");
+            var token2 = new StringToken("unicorn");
+            var probabilities = _classifier.CalculateProbabilities(new IToken[] {token1, token2}).ToList();
+            
+            probabilities.Single(p => p.Class.Equals(_spamClass))
+                .Probability.Should()
+                .BeApproximately(1 / 3D, 0.000001, "because the token is more likely to be a ham than spam word");
+
+            probabilities.Single(p => p.Class.Equals(_hamClass))
+                .Probability.Should()
+                .BeApproximately(2 / 3D, 0.000001, "because the token is more likely to be a ham than spam word");
+        }
     }
 }

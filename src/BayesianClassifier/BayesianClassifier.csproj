@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClassBase.cs" />
+    <Compile Include="GroupedConditionalProbabilities.cs" />
     <Compile Include="LinqExtensions.cs" />
     <Compile Include="NaiveClassifier.cs" />
     <Compile Include="ConditionalProbability.cs" />
