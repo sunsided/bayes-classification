@@ -8,6 +8,9 @@ using JetBrains.Annotations;
 
 namespace SmsSpam
 {
+    /// <summary>
+    /// Class SmsDataReader. This class cannot be inherited.
+    /// </summary>
     sealed class SmsDataReader : IEnumerable<Sms>
     {
         /// <summary>
@@ -29,6 +32,8 @@ namespace SmsSpam
         /// Returns an enumerator that iterates through the collection.
         /// </summary>
         /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
+        /// <exception cref="System.Exception">Expected message type to be either \spam\ or \ham\, but found \ +
+        ///                                         typeCode + \</exception>
         public IEnumerator<Sms> GetEnumerator()
         {
             var filePath = _filePath;
@@ -46,23 +51,30 @@ namespace SmsSpam
                     var typeCode = parts[0].ToLowerInvariant();
                     var message = parts[1];
 
-                    // select type
-                    MessageType type;
-                    switch (typeCode)
-                    {
-                        case "spam":
-                            type = MessageType.Spam;
-                            break;
-                        case "ham":
-                            type = MessageType.Ham;
-                            break;
-                        default:
-                            throw new Exception("Expected message type to be either \"spam\" or \"ham\", but found \"" +
-                                                typeCode + "\"");
-                    }
-
+                    var type = DecodeMessageType(typeCode);
                     yield return new Sms(type, message);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Decodes the type of the message.
+        /// </summary>
+        /// <param name="typeCode">The type code.</param>
+        /// <returns>MessageType.</returns>
+        /// <exception cref="System.Exception">Expected message type to be either \spam\ or \ham\, but found \ +
+        ///                                         typeCode + \</exception>
+        private static MessageType DecodeMessageType([NotNull] string typeCode)
+        {
+            switch (typeCode)
+            {
+                case "spam":
+                    return MessageType.Spam;
+                case "ham":
+                    return MessageType.Ham;
+                default:
+                    throw new Exception("Expected message type to be either \"spam\" or \"ham\", but found \"" +
+                                        typeCode + "\"");
             }
         }
 
