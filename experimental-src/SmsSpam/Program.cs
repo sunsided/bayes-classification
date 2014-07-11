@@ -3,26 +3,152 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BayesianClassifier;
+using JetBrains.Annotations;
 
 namespace SmsSpam
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// Whitespace-like characters for string splitting
+        /// </summary>
+        private static readonly char[] Whitespace = { ' ', '\r', '\n', '(', ')' };
+
+        /// <summary>
+        /// Punctuation characters for string cleaning
+        /// </summary>
+        private static readonly char[] Punctuation = { '.', ',', '!', '?', ':', ';', '&', '\'', '"', '`', '´', '-', '+' };
+
+        /// <summary>
+        /// Digit characters for string cleaning
+        /// </summary>
+        private static readonly char[] Digits = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0' };
+
+        /// <summary>
+        /// Defines the entry point of the application.
+        /// </summary>
+        /// <param name="args">The arguments.</param>
+        private static void Main([NotNull] string[] args)
         {
             const string path = @".\data\SMSSpamCollection";
             var fileInfo = new FileInfo(path);
             var dataSet = new SmsDataReader(fileInfo);
+
+            var hamClass = new EnumClass(MessageType.Ham, 0.5);
+            var hamSet = new DataSet(hamClass);
+
+            var spamClass = new EnumClass(MessageType.Spam, 0.5);
+            var spamSet = new DataSet(spamClass);
+
+            var trainingSet = new TrainingSet();
+            trainingSet.Add(hamSet, spamSet);
+
+            var classifier = new NaiveClassifier(trainingSet)
+                             {
+                                 SmoothingAlpha = 1
+                             };
+
+            Console.WriteLine("Reading data file ...");
+            var smsCollection = dataSet.ToList();
+
+            Console.WriteLine("Training Bayes filter ...");
             foreach (var sms in dataSet)
             {
-                Console.WriteLine(sms.Content);
+                // register sms for later testing
+                smsCollection.Add(sms);
+
+                // select correct data set
+                var set = sms.Type == MessageType.Ham
+                    ? hamSet
+                    : spamSet;
+
+                // get the tokens and add them to the set
+                var tokens = GetTokensFromSms(sms);
+                set.AddToken(tokens);
+            }
+
+            Console.WriteLine("Reducing data sets ...");
+            hamSet.PurgeWhere(tc => tc.Count <= 2);
+            spamSet.PurgeWhere(tc => tc.Count <= 2);
+
+            Console.WriteLine("Testing Bayes filter ...");
+            foreach (var sms in smsCollection)
+            {
+                var tokens = GetTokensFromSms(sms).ToList();
+                var bestClass = classifier.CalculateProbabilities(tokens)
+                    .OrderByDescending(c => c.Probability)
+                    .First();
+
+                var realType = sms.Type;
+                var estimatedType = ((EnumClass)bestClass.Class).Type;
+                var probability = bestClass.Probability;
+                var result = realType == estimatedType ? "GOOD" : "BAD";
+                Console.WriteLine("{3,-4}: SMS of type [{0,-4}] - estimated [{1,-4}] with {2:P}", realType, estimatedType, probability, result);
             }
 
             if (!Debugger.IsAttached) return;
             Console.WriteLine("Press key to exit.");
             Console.ReadKey(true);
+        }
+
+        /// <summary>
+        /// Gets the tokens from the SMS.
+        /// </summary>
+        /// <param name="sms">The SMS.</param>
+        /// <returns>IEnumerable&lt;IToken&gt;.</returns>
+        [NotNull]
+        private static IEnumerable<IToken> GetTokensFromSms([NotNull] Sms sms)
+        {
+            var words = GetWords(sms);
+            var tokens = words.Where(CanKeepWord).Select(CreateToken);
+            return tokens;
+        }
+
+        /// <summary>
+        /// Gets the words.
+        /// </summary>
+        /// <param name="sms">The SMS.</param>
+        [NotNull]
+        private static IEnumerable<string> GetWords([NotNull] Sms sms)
+        {
+            var cleanedContent = sms.Content
+                .Where(Punctuation.DoesNotContain)
+                .Where(Digits.DoesNotContain)
+                .Glue();
+
+            return cleanedContent.Split(Whitespace, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        /// <summary>
+        /// Determines if the word should be discarded
+        /// </summary>
+        /// <param name="word">The word.</param>
+        /// <returns><c>true</c> if the word should be discarded, <c>false</c> otherwise.</returns>
+        private static bool ShouldDiscardWord([NotNull] string word)
+        {
+            return word.Length <= 2;
+        }
+
+        /// <summary>
+        /// Determines whether this word can be kept, i.e. should not be discarded.
+        /// </summary>
+        /// <param name="word">The word.</param>
+        /// <returns><c>true</c> if this word can be kept; otherwise, <c>false</c>.</returns>
+        private static bool CanKeepWord([NotNull] string word)
+        {
+            return !ShouldDiscardWord(word);
+        }
+
+        /// <summary>
+        /// Creates a token from a given word.
+        /// </summary>
+        /// <param name="word">The word.</param>
+        /// <returns>IToken.</returns>
+        [NotNull]
+        private static IToken CreateToken([NotNull] string word)
+        {
+            return new StringToken(word);
         }
     }
 }
