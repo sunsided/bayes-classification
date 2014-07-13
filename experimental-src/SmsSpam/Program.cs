@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using BayesianClassifier;
@@ -46,7 +46,7 @@ namespace SmsSpam
 
             var classifier = new NaiveClassifier(trainingSet)
                              {
-                                 SmoothingAlpha = 1
+                                 SmoothingAlpha = 0.1
                              };
 
             Console.WriteLine("Reading data file ...");
@@ -80,12 +80,13 @@ namespace SmsSpam
             spamSet.PurgeWhere(tc => tc.Count <= minimumCount);
 
             // Console.WriteLine("Adjust class base probabilities ...");
-            // hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
-            // spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
+            hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
+            spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
 
             Console.WriteLine("Testing Bayes filter ...");
             int correctPredictions = 0;
             int wrongPredictions = 0;
+            var mispredictions = new Collection<Sms>();
             foreach (var sms in smsCollection)
             {
                 var tokens = GetTokensFromSms(sms).Distinct().ToList();
@@ -99,14 +100,22 @@ namespace SmsSpam
                 var realType = sms.Type;
                 var estimatedType = ((EnumClass)bestClass.Class).Type;
                 var probability = bestClass.Probability;
-                var result = realType == estimatedType ? "GOOD" : "BAD";
+
+                // assume correct match and select output
+                string result = "GOOD";
+                ++correctPredictions;
+
+                // correct for mismatch
+                if (realType != estimatedType)
+                {
+                    --correctPredictions;
+                    ++wrongPredictions;
+                    mispredictions.Add(sms);
+                    result = "BAD";
+                }
+
                 Console.WriteLine("{3,-4}: SMS of type [{0,-4}] - estimated [{1,-4}] with {2:P}", realType, estimatedType, probability, result);
                 // Debug.Assert(realType == estimatedType, "realType == estimatedType");
-
-                if (realType == estimatedType)
-                    ++ correctPredictions;
-                else
-                    ++ wrongPredictions;
             }
 
             Console.WriteLine();
@@ -115,6 +124,20 @@ namespace SmsSpam
                 (double) correctPredictions/totalPredictions);
             Console.WriteLine("Mispredictions:      {0}/{1} ({2:P})", wrongPredictions, totalPredictions,
                 (double)wrongPredictions / totalPredictions);
+
+            Console.WriteLine();
+            Console.WriteLine("False negatives:");
+            foreach (var misprediction in mispredictions.Where(sms => sms.Type == MessageType.Ham))
+            {
+                Console.WriteLine("- [{0,-4}] {1}", misprediction.Type, misprediction.Content);
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("False positives:");
+            foreach (var misprediction in mispredictions.Where(sms => sms.Type == MessageType.Spam))
+            {
+                Console.WriteLine("- [{0,-4}] {1}", misprediction.Type, misprediction.Content);
+            }
 
             if (!Debugger.IsAttached) return;
             Console.WriteLine("Press key to exit.");
@@ -168,7 +191,7 @@ namespace SmsSpam
         /// <returns><c>true</c> if the word should be discarded, <c>false</c> otherwise.</returns>
         private static bool ShouldDiscardWord([NotNull] string word)
         {
-            return word.Length <= 1;
+            return false;  // word.Length <= 1;
         }
 
         /// <summary>
