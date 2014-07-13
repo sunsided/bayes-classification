@@ -163,9 +163,10 @@ namespace BayesianClassifier
             return from set in sets
                 let @class = set.Class
                 let classProbability = @class.Probability
-                let probabilityForTokens = from token in tokens
-                                           let tokenProbability = CalculateProbability(@class, token, alpha)
-                                           select new ConditionalProbability(@class, token, tokenProbability)
+                let probabilityForTokens = (from token in tokens
+                    let tokenProbability = CalculateProbability(@class, token, alpha)
+                    select new ConditionalProbability(@class, token, tokenProbability))
+                    .ToCollection()
                 let productOfProbabilities = probabilityForTokens.Aggregate(classProbability, (product, p) => product*p.Probability)
                 select new GroupedConditionalProbability(@class, productOfProbabilities, probabilityForTokens);
         }

@@ -75,16 +75,18 @@ namespace SmsSpam
             Console.WriteLine("Testing Bayes filter ...");
             foreach (var sms in smsCollection)
             {
-                var tokens = GetTokensFromSms(sms).ToList();
-                var bestClass = classifier.CalculateProbabilities(tokens)
+                var tokens = GetTokensFromSms(sms).Distinct().ToList();
+                var classes = classifier.CalculateProbabilities(tokens)
                     .OrderByDescending(c => c.Probability)
-                    .First();
+                    .ToList();
+                var bestClass = classes.First();
 
                 var realType = sms.Type;
                 var estimatedType = ((EnumClass)bestClass.Class).Type;
                 var probability = bestClass.Probability;
                 var result = realType == estimatedType ? "GOOD" : "BAD";
                 Console.WriteLine("{3,-4}: SMS of type [{0,-4}] - estimated [{1,-4}] with {2:P}", realType, estimatedType, probability, result);
+                Debug.Assert(realType == estimatedType, "realType == estimatedType");
             }
 
             if (!Debugger.IsAttached) return;
@@ -113,11 +115,23 @@ namespace SmsSpam
         private static IEnumerable<string> GetWords([NotNull] Sms sms)
         {
             var cleanedContent = sms.Content
-                .Where(Punctuation.DoesNotContain)
-                .Where(Digits.DoesNotContain)
+                .Select(FilterCharacter)
                 .Glue();
 
             return cleanedContent.Split(Whitespace, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        /// <summary>
+        /// Filters the character.
+        /// </summary>
+        /// <param name="c">The c.</param>
+        /// <returns>IEnumerable&lt;System.Char&gt;.</returns>
+        private static char FilterCharacter(char c)
+        {
+            const char space = ' ';
+            if (Punctuation.Contains(c)) return space;
+            if (Digits.Contains(c)) return space;
+            return c;
         }
 
         /// <summary>
@@ -127,7 +141,7 @@ namespace SmsSpam
         /// <returns><c>true</c> if the word should be discarded, <c>false</c> otherwise.</returns>
         private static bool ShouldDiscardWord([NotNull] string word)
         {
-            return word.Length <= 2;
+            return word.Length <= 1;
         }
 
         /// <summary>
@@ -148,7 +162,7 @@ namespace SmsSpam
         [NotNull]
         private static IToken CreateToken([NotNull] string word)
         {
-            return new StringToken(word);
+            return new StringToken(word.ToLowerInvariant());
         }
     }
 }

@@ -6,7 +6,7 @@ namespace SmsSpam
     /// <summary>
     /// Class Sms. This class cannot be inherited.
     /// </summary>
-    [DebuggerDisplay("{Type} {Message}")]
+    [DebuggerDisplay("{Type} {Content}")]
     sealed class Sms
     {
         /// <summary>

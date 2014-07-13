@@ -19,6 +19,9 @@ namespace BayesianClassifier
         [NotNull]
         public static ICollection<T> ToCollection<T>([NotNull] this IEnumerable<T> enumerable)
         {
+            var type = enumerable.GetType();
+            if (type.IsGenericCollectionType()) return (ICollection<T>)enumerable;
+
             var collection = new Collection<T>();
             foreach (var t in enumerable)
             {
@@ -47,7 +50,7 @@ namespace BayesianClassifier
         /// </summary>
         [NotNull]
         private static readonly ConcurrentDictionary<Type, bool> IsGenericCollectionTypeCache = new ConcurrentDictionary<Type, bool>();
-
+        
         /// <summary>
         /// Determines whether the specified type is a (generic) collection.
         /// </summary>
