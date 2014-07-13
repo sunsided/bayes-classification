@@ -16,10 +16,10 @@ namespace BayesianClassifier
         public readonly IClass Class;
         
         /// <summary>
-        /// The tokens
+        /// The token probabilities
         /// </summary>
         [NotNull]
-        public IEnumerable<IToken> Tokens;
+        public IEnumerable<ConditionalProbability> TokenProbabilities;
 
         /// <summary>
         /// The probability
@@ -31,16 +31,16 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="class">The class.</param>
         /// <param name="probability">The probability.</param>
-        /// <param name="tokens">The tokens.</param>
-        public GroupedConditionalProbability([NotNull] IClass @class, double probability, [NotNull] IEnumerable<IToken> tokens)
+        /// <param name="tokenProbabilities">The tokenProbabilities.</param>
+        public GroupedConditionalProbability([NotNull] IClass @class, double probability, [NotNull] IEnumerable<ConditionalProbability> tokenProbabilities)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
-            if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
+            if (ReferenceEquals(tokenProbabilities, null)) throw new ArgumentNullException("tokenProbabilities");
             if (probability < 0) throw new ArgumentOutOfRangeException("probability", probability, "Probability must greater than or equal to zero");
             if (probability > 1) throw new ArgumentOutOfRangeException("probability", probability, "Probability must less than or equal to one");
 
             Class = @class;
-            Tokens = tokens;
+            TokenProbabilities = tokenProbabilities;
             Probability = probability;
         }
     }

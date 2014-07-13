@@ -71,7 +71,7 @@ namespace BayesianClassifier
 
             // calculate the token's probabilities for the remaining classes
             double sumOfRemainingProbabilites;
-            CalculateTokenProbabilityGivenClass(token, remainingSets, out sumOfRemainingProbabilites, smoothingAlpha);
+            CalculateTokenProbabilityGivenClass(token, remainingSets, out sumOfRemainingProbabilites, smoothingAlpha).Run();
 
             // calculate total probability
             var totalProbability = probabilityInClassUnderTest + sumOfRemainingProbabilites;
@@ -128,7 +128,7 @@ namespace BayesianClassifier
             foreach (var group in probabilitiesForTokens)
             {
                 var probability = group.Probability*inverseTotalProbability;
-                yield return new GroupedConditionalProbability(group.Class, probability, group.Tokens);
+                yield return new GroupedConditionalProbability(group.Class, probability, group.TokenProbabilities);
             }
         }
 
@@ -164,9 +164,10 @@ namespace BayesianClassifier
                 let @class = set.Class
                 let classProbability = @class.Probability
                 let probabilityForTokens = from token in tokens
-                    select set.GetPercentage(token, alpha)
-                let productOfProbabilities = probabilityForTokens.Aggregate(classProbability, (product, p) => product*p)
-                select new GroupedConditionalProbability(@class, productOfProbabilities, tokens);
+                                           let tokenProbability = CalculateProbability(@class, token, alpha)
+                                           select new ConditionalProbability(@class, token, tokenProbability)
+                let productOfProbabilities = probabilityForTokens.Aggregate(classProbability, (product, p) => product*p.Probability)
+                select new GroupedConditionalProbability(@class, productOfProbabilities, probabilityForTokens);
         }
         
         /// <summary>
