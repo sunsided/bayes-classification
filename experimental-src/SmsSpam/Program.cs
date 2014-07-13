@@ -71,6 +71,21 @@ namespace SmsSpam
                 set.AddToken(tokens);
             }
 
+            const int count = 20;
+            Console.WriteLine("Determining {0} highest frequency tokens ...", count);
+            var highestFrequencies = hamSet.Concat(spamSet).OrderByDescending(e => e.Count).Take(count);
+            var stopWords = new Collection<IToken>();
+            foreach (var token in highestFrequencies)
+            {
+                Console.WriteLine("- {0} ({1})", token.Token, token.Count);
+                
+                // register as stop-words and remove from dataset
+                var stopword = token.Token;
+                stopWords.Add(stopword);
+                spamSet.PurgeToken(stopword);
+                hamSet.PurgeToken(stopword);
+            }
+
 #if false
             Console.WriteLine("Reducing data sets ...");
             const int minimumCount = 10;
@@ -78,10 +93,12 @@ namespace SmsSpam
             spamSet.PurgeWhere(tc => tc.Count <= minimumCount);
 #endif
             
-#if false
+#if true
             Console.WriteLine("Adjust class base probabilities ...");
             hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
             spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
+            Console.WriteLine("- ham base probability:  {0:P}", hamClass.Probability);
+            Console.WriteLine("- spam base probability: {0:P}", spamClass.Probability);
 #endif
 
             Console.WriteLine("Testing Bayes filter ...");
@@ -90,7 +107,7 @@ namespace SmsSpam
             var mispredictions = new Collection<KeyValuePair<Sms, double>>();
             foreach (var sms in smsCollection)
             {
-                var tokens = GetTokensFromSms(sms).ToList();
+                var tokens = GetTokensFromSms(sms).Where(token => !stopWords.Contains(token)).ToList();
                 if (!tokens.Any()) continue;
 
                 var classes = classifier.CalculateProbabilities(tokens)
