@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using BayesianClassifier;
@@ -35,14 +36,13 @@ namespace SmsSpam
             var fileInfo = new FileInfo(path);
             var dataSet = new SmsDataReader(fileInfo);
 
-            var hamClass = new EnumClass(MessageType.Ham, 0.5);
+            var hamClass = new EnumClass(MessageType.Ham, 0.5D);
             var hamSet = new DataSet(hamClass);
 
-            var spamClass = new EnumClass(MessageType.Spam, 0.5);
+            var spamClass = new EnumClass(MessageType.Spam, 0.5D);
             var spamSet = new DataSet(spamClass);
 
-            var trainingSet = new TrainingSet();
-            trainingSet.Add(hamSet, spamSet);
+            var trainingSet = new TrainingSet(hamSet, spamSet);
 
             var classifier = new NaiveClassifier(trainingSet)
                              {
@@ -51,6 +51,8 @@ namespace SmsSpam
 
             Console.WriteLine("Reading data file ...");
             var smsCollection = dataSet.ToList();
+            int hamMessageCount = 0;
+            int spamMessageCount = 0;
 
             Console.WriteLine("Training Bayes filter ...");
             foreach (var sms in dataSet)
@@ -63,6 +65,10 @@ namespace SmsSpam
                     ? hamSet
                     : spamSet;
 
+                // count training data
+                if (sms.Type == MessageType.Ham) ++hamMessageCount;
+                else ++spamMessageCount;
+
                 // get the tokens and add them to the set
                 var tokens = GetTokensFromSms(sms);
                 set.AddToken(tokens);
@@ -72,8 +78,11 @@ namespace SmsSpam
             hamSet.PurgeWhere(tc => tc.Count <= 2);
             spamSet.PurgeWhere(tc => tc.Count <= 2);
 
+            /*
             Console.WriteLine("Adjust class base probabilities ...");
-            trainingSet.AdjustClassProbabilities();
+            hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
+            spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
+            */
 
             Console.WriteLine("Testing Bayes filter ...");
             foreach (var sms in smsCollection)

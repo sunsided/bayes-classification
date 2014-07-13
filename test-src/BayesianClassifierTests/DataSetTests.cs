@@ -216,10 +216,10 @@ namespace BayesianClassifierTests
 
             _dataSet.GetPercentage(token1)
                 .Should()
-                .BeApproximately(2/3D, 0.0001, "because we added that token twice out of three tokens");
+                .BeApproximately(2/3D, 0.0001D, "because we added that token twice out of three tokens");
             _dataSet.GetPercentage(token3)
                 .Should()
-                .BeApproximately(1/3D, 0.0001, "because we added that token once out of three tokens");
+                .BeApproximately(1/3D, 0.0001D, "because we added that token once out of three tokens");
         }
 
         [Test]
@@ -236,7 +236,7 @@ namespace BayesianClassifierTests
 
             _dataSet[token1].Percentage
                 .Should()
-                .BeApproximately(2 / 3D, 0.0001, "because we added that token twice out of three tokens");
+                .BeApproximately(2 / 3D, 0.0001D, "because we added that token twice out of three tokens");
 
             _dataSet[token3].Count
                 .Should()
@@ -244,7 +244,7 @@ namespace BayesianClassifierTests
 
             _dataSet[token3].Percentage
                 .Should()
-                .BeApproximately(1 / 3D, 0.0001, "because we added that token once out of three tokens");
+                .BeApproximately(1 / 3D, 0.0001D, "because we added that token once out of three tokens");
         }
     }
 }

@@ -19,6 +19,32 @@ namespace BayesianClassifier
         private readonly ConcurrentDictionary<IClass, IDataSet> _dataSets = new ConcurrentDictionary<IClass, IDataSet>();
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="TrainingSet"/> class.
+        /// </summary>
+        public TrainingSet()
+        {           
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TrainingSet"/> class.
+        /// </summary>
+        /// <param name="dataSets">The data sets.</param>
+        public TrainingSet([NotNull] IEnumerable<IDataSet> dataSets)
+        {
+            Add(dataSets);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TrainingSet"/> class.
+        /// </summary>
+        /// <param name="dataSet">The data set.</param>
+        /// <param name="additionalDataSets">The additional data sets.</param>
+        public TrainingSet([NotNull] IDataSet dataSet, [NotNull] params IDataSet[] additionalDataSets)
+        {
+            Add(dataSet, additionalDataSets);
+        }
+
+        /// <summary>
         /// Gets the <see cref="IDataSet"/> with the specified class.
         /// </summary>
         /// <param name="class">The class.</param>
@@ -81,19 +107,6 @@ namespace BayesianClassifier
             }
         }
 
-        /// <summary>
-        /// Adjusts the class probabilities based on token count.
-        /// </summary>
-        public void AdjustClassProbabilities()
-        {
-            var totalTokenCount = (double)_dataSets.Select(pair => pair.Value.TokenCount).Sum();
-            var inverseTotalTokenCount = 1.0D/totalTokenCount;
-
-            foreach (var dataSet in _dataSets.Select(pair => pair.Value))
-            {
-                dataSet.Class.Probability = dataSet.TokenCount * inverseTotalTokenCount;
-            }
-        }
 
         /// <summary>
         /// Adds the data set internally.

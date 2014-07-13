@@ -45,7 +45,7 @@ namespace BayesianClassifier
             if (ReferenceEquals(other, null)) return false;
             if (ReferenceEquals(other, this)) return true;
             return String.Equals(Name, other.Name) 
-                && Math.Abs(Probability - other.Probability) < 0.0001;
+                && Math.Abs(Probability - other.Probability) < 0.0001D;
         }
 
         /// <summary>

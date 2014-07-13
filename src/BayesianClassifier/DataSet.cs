@@ -145,7 +145,7 @@ namespace BayesianClassifier
             var totalCount = _setSize; // TODO: cache inverse set size
             var vocabularySize = TokenCount;
 
-            return (tokenCount + alpha)/(totalCount + alpha*vocabularySize);
+            return (double)(tokenCount + alpha)/(double)(totalCount + alpha*vocabularySize);
         }
 
         /// <summary>

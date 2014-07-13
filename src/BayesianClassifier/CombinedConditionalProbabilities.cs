@@ -6,10 +6,10 @@ using JetBrains.Annotations;
 namespace BayesianClassifier
 {
     /// <summary>
-    /// Struct GroupedConditionalProbability
+    /// Struct CombinedConditionalProbability
     /// </summary>
     [DebuggerDisplay("P({Class}|{TokenProbabilities.Count} tokens)={Probability}")]
-    public struct GroupedConditionalProbability
+    public struct CombinedConditionalProbability
     {
         /// <summary>
         /// The class
@@ -29,12 +29,12 @@ namespace BayesianClassifier
         public double Probability;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GroupedConditionalProbability" /> struct.
+        /// Initializes a new instance of the <see cref="CombinedConditionalProbability" /> struct.
         /// </summary>
         /// <param name="class">The class.</param>
         /// <param name="probability">The probability.</param>
         /// <param name="tokenProbabilities">The tokenProbabilities.</param>
-        public GroupedConditionalProbability([NotNull] IClass @class, double probability, [NotNull] ICollection<ConditionalProbability> tokenProbabilities)
+        public CombinedConditionalProbability([NotNull] IClass @class, double probability, [NotNull] ICollection<ConditionalProbability> tokenProbabilities)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
             if (ReferenceEquals(tokenProbabilities, null)) throw new ArgumentNullException("tokenProbabilities");
