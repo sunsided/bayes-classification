@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
@@ -29,6 +30,7 @@ namespace BayesianClassifier
         /// <summary>
         /// Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.
         /// </summary>
+        [DefaultValue(1)]
         public double SmoothingAlpha
         {
             get { return _smoothingAlpha; }
@@ -78,6 +80,8 @@ namespace BayesianClassifier
 
             // calculate the class' probability given the token
             var probabilityForClass = probabilityInClassUnderTest/totalProbability;
+
+            // correct for rare words
             return probabilityForClass;
         }
         
@@ -98,12 +102,12 @@ namespace BayesianClassifier
             // calculate the token's probabilities for all classes
             double totalProbability;
             var probabilities = CalculateTokenProbabilityGivenClass(token, _trainingSets, out totalProbability, smoothingAlpha);
-
+            
             // apply Bayes theorem
             var inverseOfTotalProbability = 1.0D/totalProbability;
             return from cp in probabilities
                    let conditionalProbability = cp.Probability * inverseOfTotalProbability
-                   select new ConditionalProbability(cp.Class, cp.Token, conditionalProbability);
+                   select new ConditionalProbability(cp.Class, cp.Token, conditionalProbability, cp.Occurrence);
         }
 
         /// <summary>
@@ -148,11 +152,12 @@ namespace BayesianClassifier
         private IEnumerable<ConditionalProbability> CalculateTokenProbabilityGivenClass([NotNull] IToken token, [NotNull] IEnumerable<IDataSetAccessor> sets, double alpha)
         {
             return from set in sets
-                   let @class = set.Class
-                   let classProbability = @class.Probability
-                   let percentageInClass = set.GetPercentage(token, alpha)
-                   let probabilityInClass = percentageInClass * classProbability
-                   select new ConditionalProbability(@class, token, probabilityInClass);
+                let @class = set.Class
+                let classProbability = @class.Probability
+                let percentageInClass = set.GetPercentage(token, alpha)
+                let countInClass = set.GetCount(token)
+                let probabilityInClass = percentageInClass*classProbability
+                select new ConditionalProbability(@class, token, probabilityInClass, countInClass);
         }
 
         /// <summary>

@@ -26,31 +26,35 @@ namespace BayesianClassifier
         public readonly double Probability;
 
         /// <summary>
+        /// The occurrence of the token during the training phase.
+        /// </summary>
+        public readonly long Occurrence;
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="ConditionalProbability" /> struct.
         /// </summary>
         /// <param name="class">The class.</param>
         /// <param name="token">The token.</param>
         /// <param name="probability">The probability.</param>
-        /// <exception cref="System.ArgumentNullException">
-        /// @class
+        /// <param name="occurrence">The occurrence.</param>
+        /// <exception cref="System.ArgumentNullException">@class
         /// or
-        /// token
-        /// </exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">
-        /// probability;Probability must greater than or equal to zero
+        /// token</exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">probability;Probability must greater than or equal to zero
         /// or
-        /// probability;Probability must less than or equal to one
-        /// </exception>
-        public ConditionalProbability([NotNull] IClass @class, [NotNull] IToken token, double probability)
+        /// probability;Probability must less than or equal to one</exception>
+        public ConditionalProbability([NotNull] IClass @class, [NotNull] IToken token, double probability, long occurrence)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
             if (probability < 0) throw new ArgumentOutOfRangeException("probability", probability, "Probability must greater than or equal to zero");
             if (probability > 1) throw new ArgumentOutOfRangeException("probability", probability, "Probability must less than or equal to one");
+            if (probability < 0) throw new ArgumentOutOfRangeException("occurrence", occurrence, "Occurrence must greater than or equal to zero");
 
             Class = @class;
             Token = token;
             Probability = probability;
+            Occurrence = occurrence;
         }
 
         /// <summary>

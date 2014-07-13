@@ -8,7 +8,7 @@ namespace SmsSpam
     /// Class Sms. This class cannot be inherited.
     /// </summary>
     [DebuggerDisplay("{Type} {Content}")]
-    sealed class Sms
+    sealed class Sms : IEquatable<Sms>
     {
         /// <summary>
         /// Gets the type.
@@ -39,7 +39,7 @@ namespace SmsSpam
         /// </summary>
         /// <param name="other">The other.</param>
         /// <returns><c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.</returns>
-        private bool Equals([NotNull] Sms other)
+        public bool Equals([NotNull] Sms other)
         {
             return Type == other.Type &&
                    String.Equals(Content, other.Content, StringComparison.InvariantCultureIgnoreCase);
@@ -65,7 +65,7 @@ namespace SmsSpam
         {
             unchecked
             {
-                return ((int) Type*397) ^ Content.GetHashCode();
+                return ((int) Type*397) ^ Content.ToLowerInvariant().GetHashCode();
             }
         }
     }

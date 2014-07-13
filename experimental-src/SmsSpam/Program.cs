@@ -46,7 +46,7 @@ namespace SmsSpam
 
             var classifier = new NaiveClassifier(trainingSet)
                              {
-                                 SmoothingAlpha = 0.01
+                                 SmoothingAlpha = 0.00001
                              };
 
             Console.WriteLine("Reading data file ...");
@@ -55,11 +55,8 @@ namespace SmsSpam
             int spamMessageCount = 0;
 
             Console.WriteLine("Training Bayes filter ...");
-            foreach (var sms in dataSet)
+            foreach (var sms in smsCollection)
             {
-                // register sms for later testing
-                smsCollection.Add(sms);
-
                 // select correct data set
                 var set = sms.Type == MessageType.Ham
                     ? hamSet
@@ -80,8 +77,8 @@ namespace SmsSpam
             spamSet.PurgeWhere(tc => tc.Count <= minimumCount);
 
             // Console.WriteLine("Adjust class base probabilities ...");
-            hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
-            spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
+            //hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
+            //spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
 
             Console.WriteLine("Testing Bayes filter ...");
             int correctPredictions = 0;
@@ -89,7 +86,7 @@ namespace SmsSpam
             var mispredictions = new Collection<KeyValuePair<Sms, double>>();
             foreach (var sms in smsCollection)
             {
-                var tokens = GetTokensFromSms(sms).Distinct().ToList();
+                var tokens = GetTokensFromSms(sms).ToList();
                 if (!tokens.Any()) continue;
 
                 var classes = classifier.CalculateProbabilities(tokens)
@@ -119,10 +116,14 @@ namespace SmsSpam
             }
 
             Console.WriteLine();
+            Console.WriteLine("Ham messages:  {0}", hamMessageCount);
+            Console.WriteLine("Spam messages: {0}", spamMessageCount);
+
+            Console.WriteLine();
             var totalPredictions = correctPredictions + wrongPredictions;
-            Console.WriteLine("Correct predictions: {0}/{1} ({2,-10:P})", correctPredictions, totalPredictions,
+            Console.WriteLine("Correct predictions: {0}/{1} ({2:P})", correctPredictions, totalPredictions,
                 (double) correctPredictions/totalPredictions);
-            Console.WriteLine("Mispredictions:      {0}/{1} ({2,-10:P})", wrongPredictions, totalPredictions,
+            Console.WriteLine("Mispredictions:      {0}/{1} ({2:P})", wrongPredictions, totalPredictions,
                 (double)wrongPredictions / totalPredictions);
 
             Console.WriteLine();
@@ -165,6 +166,7 @@ namespace SmsSpam
         private static IEnumerable<string> GetWords([NotNull] Sms sms)
         {
             var cleanedContent = sms.Content
+                .ToLowerInvariant()
                 .Select(FilterCharacter)
                 .Glue();
 
