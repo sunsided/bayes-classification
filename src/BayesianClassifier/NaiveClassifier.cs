@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
@@ -24,17 +25,18 @@ namespace BayesianClassifier
         /// <summary>
         /// Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.
         /// </summary>
-        private double _smoothingAlpha = 1.0D;
+        private double _smoothingAlpha = 0.01D;
 
         /// <summary>
         /// Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.
         /// </summary>
+        [DefaultValue(0.01D)]
         public double SmoothingAlpha
         {
             get { return _smoothingAlpha; }
             set
             {
-                if (value < 0) throw new ArgumentOutOfRangeException("value", value, "Value must be greater than or equal to zero.");
+                if (value <= 0) throw new ArgumentOutOfRangeException("value", value, "Value must be greater than zero.");
                 _smoothingAlpha = value;
             }
         }
@@ -71,13 +73,15 @@ namespace BayesianClassifier
 
             // calculate the token's probabilities for the remaining classes
             double sumOfRemainingProbabilites;
-            CalculateTokenProbabilityGivenClass(token, remainingSets, out sumOfRemainingProbabilites, smoothingAlpha);
+            CalculateTokenProbabilityGivenClass(token, remainingSets, out sumOfRemainingProbabilites, smoothingAlpha).Run();
 
             // calculate total probability
             var totalProbability = probabilityInClassUnderTest + sumOfRemainingProbabilites;
 
             // calculate the class' probability given the token
             var probabilityForClass = probabilityInClassUnderTest/totalProbability;
+
+            // correct for rare words
             return probabilityForClass;
         }
         
@@ -98,12 +102,12 @@ namespace BayesianClassifier
             // calculate the token's probabilities for all classes
             double totalProbability;
             var probabilities = CalculateTokenProbabilityGivenClass(token, _trainingSets, out totalProbability, smoothingAlpha);
-
+            
             // apply Bayes theorem
             var inverseOfTotalProbability = 1.0D/totalProbability;
             return from cp in probabilities
                    let conditionalProbability = cp.Probability * inverseOfTotalProbability
-                   select new ConditionalProbability(cp.Class, cp.Token, conditionalProbability);
+                   select new ConditionalProbability(cp.Class, cp.Token, conditionalProbability, cp.Occurrence);
         }
 
         /// <summary>
@@ -116,20 +120,21 @@ namespace BayesianClassifier
         /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
         /// <returns>System.Double.</returns>
         [NotNull]
-        public IEnumerable<GroupedConditionalProbability> CalculateProbabilities([NotNull] ICollection<IToken> tokens, double? alpha = null)
+        public IEnumerable<CombinedConditionalProbability> CalculateProbabilities([NotNull] ICollection<IToken> tokens, double? alpha = null)
         {
             var smoothingAlpha = alpha ?? _smoothingAlpha;
 
-            var probabilitiesForTokens = CalculateProductOfTokenProbabilitiesGivenClass(tokens, _trainingSets, smoothingAlpha)
-                .ToList();
-            var totalProbability = probabilitiesForTokens.Sum(p => p.Probability);
-            var inverseTotalProbability = totalProbability > 0 ?  1.0D/totalProbability : 0;
+            var cpgs = tokens
+                .SelectMany(token => CalculateProbabilities(token, smoothingAlpha))
+                .GroupBy(cp => cp.Class)
+                .ToCollection();
 
-            foreach (var group in probabilitiesForTokens)
-            {
-                var probability = group.Probability*inverseTotalProbability;
-                yield return new GroupedConditionalProbability(group.Class, probability, group.Tokens);
-            }
+            return from @group in cpgs
+                let cps = @group.ToCollection()
+                let eta = cps.Select(cp => cp.Probability)
+                    .Sum(p => Math.Log(1 - p) - Math.Log(p))
+                let probability = 1/(1 + Math.Exp(eta))
+                select new CombinedConditionalProbability(@group.Key, probability, cps);
         }
 
         /// <summary>
@@ -143,32 +148,14 @@ namespace BayesianClassifier
         private IEnumerable<ConditionalProbability> CalculateTokenProbabilityGivenClass([NotNull] IToken token, [NotNull] IEnumerable<IDataSetAccessor> sets, double alpha)
         {
             return from set in sets
-                   let @class = set.Class
-                   let classProbability = @class.Probability
-                   let percentageInClass = set.GetPercentage(token, alpha)
-                   let probabilityInClass = percentageInClass * classProbability
-                   select new ConditionalProbability(@class, token, probabilityInClass);
-        }
-
-        /// <summary>
-        /// Calculates the token probabilities given a class.
-        /// </summary>
-        /// <param name="tokens">The tokens.</param>
-        /// <param name="sets">The sets.</param>
-        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
-        /// <returns>IEnumerable&lt;ConditionalProbability&lt;IClass, IToken&gt;&gt;.</returns>
-        [NotNull]
-        private IEnumerable<GroupedConditionalProbability> CalculateProductOfTokenProbabilitiesGivenClass([NotNull] IEnumerable<IToken> tokens, [NotNull] IEnumerable<IDataSetAccessor> sets, double alpha)
-        {
-            return from set in sets
                 let @class = set.Class
                 let classProbability = @class.Probability
-                let probabilityForTokens = from token in tokens
-                    select set.GetPercentage(token, alpha)
-                let productOfProbabilities = probabilityForTokens.Aggregate(classProbability, (product, p) => product*p)
-                select new GroupedConditionalProbability(@class, productOfProbabilities, tokens);
+                let percentageInClass = set.GetPercentage(token, alpha)
+                let countInClass = set.GetCount(token)
+                let probabilityInClass = percentageInClass*classProbability
+                select new ConditionalProbability(@class, token, probabilityInClass, countInClass);
         }
-        
+
         /// <summary>
         /// Calculates the token probabilities given a class.
         /// </summary>

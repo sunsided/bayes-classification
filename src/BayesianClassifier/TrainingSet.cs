@@ -19,6 +19,32 @@ namespace BayesianClassifier
         private readonly ConcurrentDictionary<IClass, IDataSet> _dataSets = new ConcurrentDictionary<IClass, IDataSet>();
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="TrainingSet"/> class.
+        /// </summary>
+        public TrainingSet()
+        {           
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TrainingSet"/> class.
+        /// </summary>
+        /// <param name="dataSets">The data sets.</param>
+        public TrainingSet([NotNull] IEnumerable<IDataSet> dataSets)
+        {
+            Add(dataSets);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TrainingSet"/> class.
+        /// </summary>
+        /// <param name="dataSet">The data set.</param>
+        /// <param name="additionalDataSets">The additional data sets.</param>
+        public TrainingSet([NotNull] IDataSet dataSet, [NotNull] params IDataSet[] additionalDataSets)
+        {
+            Add(dataSet, additionalDataSets);
+        }
+
+        /// <summary>
         /// Gets the <see cref="IDataSet"/> with the specified class.
         /// </summary>
         /// <param name="class">The class.</param>
@@ -80,6 +106,7 @@ namespace BayesianClassifier
                 throw new ArgumentException("A data set for a given class was already registered.", e);
             }
         }
+
 
         /// <summary>
         /// Adds the data set internally.

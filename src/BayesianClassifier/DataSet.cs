@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -144,7 +145,7 @@ namespace BayesianClassifier
             var totalCount = _setSize; // TODO: cache inverse set size
             var vocabularySize = TokenCount;
 
-            return (tokenCount + alpha)/(totalCount + alpha*vocabularySize);
+            return (double)(tokenCount + alpha)/(double)(totalCount + alpha*vocabularySize);
         }
 
         /// <summary>
@@ -260,6 +261,19 @@ namespace BayesianClassifier
             {
                 PurgeTokenInternal(token);
             }
+        }
+
+        /// <summary>
+        /// Purges the tokens fulfilling the given predicate.
+        /// </summary>
+        /// <param name="predicate">The predicate.</param>
+        public void PurgeWhere([NotNull] Predicate<TokenCount> predicate)
+        {
+            var candidateForPurge = from pair in _tokenCount
+                let tokenCount = new TokenCount(pair.Key, pair.Value)
+                where predicate(tokenCount)
+                select pair.Key;
+            PurgeToken(candidateForPurge);
         }
 
         /// <summary>

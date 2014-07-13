@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using JetBrains.Annotations;
 
 namespace BayesianClassifier
 {
     /// <summary>
-    /// Struct GroupedConditionalProbability
+    /// Struct CombinedConditionalProbability
     /// </summary>
-    public struct GroupedConditionalProbability
+    [DebuggerDisplay("P({Class}|{TokenProbabilities.Count} tokens)={Probability}")]
+    public struct CombinedConditionalProbability
     {
         /// <summary>
         /// The class
@@ -16,10 +18,10 @@ namespace BayesianClassifier
         public readonly IClass Class;
         
         /// <summary>
-        /// The tokens
+        /// The token probabilities
         /// </summary>
         [NotNull]
-        public IEnumerable<IToken> Tokens;
+        public ICollection<ConditionalProbability> TokenProbabilities;
 
         /// <summary>
         /// The probability
@@ -27,20 +29,20 @@ namespace BayesianClassifier
         public double Probability;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="GroupedConditionalProbability" /> struct.
+        /// Initializes a new instance of the <see cref="CombinedConditionalProbability" /> struct.
         /// </summary>
         /// <param name="class">The class.</param>
         /// <param name="probability">The probability.</param>
-        /// <param name="tokens">The tokens.</param>
-        public GroupedConditionalProbability([NotNull] IClass @class, double probability, [NotNull] IEnumerable<IToken> tokens)
+        /// <param name="tokenProbabilities">The tokenProbabilities.</param>
+        public CombinedConditionalProbability([NotNull] IClass @class, double probability, [NotNull] ICollection<ConditionalProbability> tokenProbabilities)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
-            if (ReferenceEquals(tokens, null)) throw new ArgumentNullException("tokens");
+            if (ReferenceEquals(tokenProbabilities, null)) throw new ArgumentNullException("tokenProbabilities");
             if (probability < 0) throw new ArgumentOutOfRangeException("probability", probability, "Probability must greater than or equal to zero");
             if (probability > 1) throw new ArgumentOutOfRangeException("probability", probability, "Probability must less than or equal to one");
 
             Class = @class;
-            Tokens = tokens;
+            TokenProbabilities = tokenProbabilities;
             Probability = probability;
         }
     }

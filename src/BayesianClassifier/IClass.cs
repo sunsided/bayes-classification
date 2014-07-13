@@ -17,10 +17,10 @@ namespace BayesianClassifier
         string Name { get; }
 
         /// <summary>
-        /// Gets the class' base probability.
+        /// Gets or sets the class' base probability.
         /// </summary>
         /// <value>The probability.</value>
         [DefaultValue(1)]
-        double Probability { get; }
+        double Probability { get; set; }
     }
 }

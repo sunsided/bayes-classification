@@ -20,7 +20,7 @@ namespace BayesianClassifier
         /// Gets the class' base probability.
         /// </summary>
         /// <value>The probability.</value>
-        public double Probability { get; private set; }
+        public double Probability { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClassBase" /> class.

@@ -147,11 +147,11 @@ namespace BayesianClassifierTests
             var probabilities = _classifier.CalculateProbabilities(token).ToList();
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
-                .BeApproximately(0, 0.000001, "because the token is known to be a ham word");
+                .BeApproximately(0D, 0.000001D, "because the token is known to be a ham word");
 
             probabilities.Single(p => p.Class.Equals(_hamClass))
                 .Probability.Should()
-                .BeApproximately(1, 0.000001, "because the token is known to be a ham word");
+                .BeApproximately(1D, 0.000001D, "because the token is known to be a ham word");
         }
 
         [Test]
@@ -162,11 +162,11 @@ namespace BayesianClassifierTests
             var probabilities = _classifier.CalculateProbabilities(token).ToList();
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
-                .BeApproximately(0.5, 0.000001, "because the token is known to be a ham and spam word");
+                .BeApproximately(0.5D, 0.000001D, "because the token is known to be a ham and spam word");
 
             probabilities.Single(p => p.Class.Equals(_hamClass))
                 .Probability.Should()
-                .BeApproximately(0.5, 0.000001, "because the token is known to be a ham and spam  word");
+                .BeApproximately(0.5D, 0.000001D, "because the token is known to be a ham and spam  word");
         }
 
         [Test]
@@ -177,11 +177,11 @@ namespace BayesianClassifierTests
             var probabilities = _classifier.CalculateProbabilities(token).ToList();
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
-                .BeApproximately(1/3D, 0.000001, "because the token is more likely to be a ham than spam word");
+                .BeApproximately(1/3D, 0.000001D, "because the token is more likely to be a ham than spam word");
 
             probabilities.Single(p => p.Class.Equals(_hamClass))
                 .Probability.Should()
-                .BeApproximately(2/3D, 0.000001, "because the token is more likely to be a ham than spam word");
+                .BeApproximately(2/3D, 0.000001D, "because the token is more likely to be a ham than spam word");
         }
 
         [Test]
@@ -196,30 +196,11 @@ namespace BayesianClassifierTests
             
             probabilities.Single(p => p.Class.Equals(_spamClass))
                 .Probability.Should()
-                .BeLessThan(0.5, "because we used more ham than spam tokens");
+                .BeLessThan(0.5D, "because we used more ham than spam tokens");
 
             probabilities.Single(p => p.Class.Equals(_hamClass))
                 .Probability.Should()
-                .BeGreaterThan(0.5, "because we used more ham than spam tokens");
-        }
-
-        [Test]
-        public void CalculateProbabilitiesWithRareTokensWithoutSmoothingAlphaIsAmbiguous()
-        {
-            var token1 = new StringToken("rolex");
-            var token2 = new StringToken("unicorn");
-            var token3 = new StringToken("send");
-
-            const double smoothingAlpha = 0D;
-            var probabilities = _classifier.CalculateProbabilities(new IToken[] { token1, token2, token3 }, smoothingAlpha).ToList();
-
-            probabilities.Single(p => p.Class.Equals(_spamClass))
-                .Probability.Should()
-                .BeApproximately(0, 0.0001D, "because the rare words cancel out the probabilities");
-
-            probabilities.Single(p => p.Class.Equals(_hamClass))
-                .Probability.Should()
-                .BeApproximately(0, 0.0001D, "because the rare words cancel out the probabilities");
+                .BeGreaterThan(0.5D, "because we used more ham than spam tokens");
         }
     }
 }

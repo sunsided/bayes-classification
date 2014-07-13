@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
@@ -18,7 +19,7 @@ namespace BayesianClassifier
         /// </para>
         /// </summary>
         double SmoothingAlpha { get; set; }
-
+        
         /// <summary>
         /// Calculates the probability of having the <see cref="IClass"/> 
         /// given the occurrence of the <see cref="IToken"/>.
@@ -51,6 +52,6 @@ namespace BayesianClassifier
         /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied, setting to <see langword="null"/> defaults to the values set in <see cref="SmoothingAlpha"/>.</param>
         /// <returns>System.Double.</returns>
         [NotNull]
-        IEnumerable<GroupedConditionalProbability> CalculateProbabilities([NotNull] ICollection<IToken> tokens, double? alpha = null);
+        IEnumerable<CombinedConditionalProbability> CalculateProbabilities([NotNull] ICollection<IToken> tokens, double? alpha = null);
     }
 }
