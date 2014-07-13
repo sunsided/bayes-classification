@@ -202,24 +202,5 @@ namespace BayesianClassifierTests
                 .Probability.Should()
                 .BeGreaterThan(0.5D, "because we used more ham than spam tokens");
         }
-
-        [Test]
-        public void CalculateProbabilitiesWithRareTokensWithoutSmoothingAlphaIsAmbiguous()
-        {
-            var token1 = new StringToken("rolex");
-            var token2 = new StringToken("unicorn");
-            var token3 = new StringToken("send");
-
-            const double smoothingAlpha = 0D;
-            var probabilities = _classifier.CalculateProbabilities(new IToken[] { token1, token2, token3 }, smoothingAlpha).ToList();
-
-            probabilities.Single(p => p.Class.Equals(_spamClass))
-                .Probability.Should()
-                .BeApproximately(0D, 0.0001D, "because the rare words cancel out the probabilities");
-
-            probabilities.Single(p => p.Class.Equals(_hamClass))
-                .Probability.Should()
-                .BeApproximately(0D, 0.0001D, "because the rare words cancel out the probabilities");
-        }
     }
 }

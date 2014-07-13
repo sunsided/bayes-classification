@@ -71,14 +71,18 @@ namespace SmsSpam
                 set.AddToken(tokens);
             }
 
+#if false
             Console.WriteLine("Reducing data sets ...");
             const int minimumCount = 10;
             hamSet.PurgeWhere(tc => tc.Count <= minimumCount);
             spamSet.PurgeWhere(tc => tc.Count <= minimumCount);
-
-            // Console.WriteLine("Adjust class base probabilities ...");
-            //hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
-            //spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
+#endif
+            
+#if false
+            Console.WriteLine("Adjust class base probabilities ...");
+            hamClass.Probability = (double)hamMessageCount / (hamMessageCount + spamMessageCount);
+            spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
+#endif
 
             Console.WriteLine("Testing Bayes filter ...");
             int correctPredictions = 0;

@@ -25,18 +25,18 @@ namespace BayesianClassifier
         /// <summary>
         /// Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.
         /// </summary>
-        private double _smoothingAlpha = 1.0D;
+        private double _smoothingAlpha = 0.01D;
 
         /// <summary>
         /// Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.
         /// </summary>
-        [DefaultValue(1)]
+        [DefaultValue(0.01D)]
         public double SmoothingAlpha
         {
             get { return _smoothingAlpha; }
             set
             {
-                if (value < 0) throw new ArgumentOutOfRangeException("value", value, "Value must be greater than or equal to zero.");
+                if (value <= 0) throw new ArgumentOutOfRangeException("value", value, "Value must be greater than zero.");
                 _smoothingAlpha = value;
             }
         }
@@ -129,16 +129,12 @@ namespace BayesianClassifier
                 .GroupBy(cp => cp.Class)
                 .ToCollection();
 
-            foreach (var group in cpgs)
-            {
-                var cps = group.ToCollection();
-                var eta = cps
-                    .Select(cp => cp.Probability)
-                    .Sum(p => Math.Log(1 - p) - Math.Log(p));
-
-                var probability = 1/(1 + Math.Exp(eta));
-                yield return new CombinedConditionalProbability(group.Key, probability, cps);
-            }
+            return from @group in cpgs
+                let cps = @group.ToCollection()
+                let eta = cps.Select(cp => cp.Probability)
+                    .Sum(p => Math.Log(1 - p) - Math.Log(p))
+                let probability = 1/(1 + Math.Exp(eta))
+                select new CombinedConditionalProbability(@group.Key, probability, cps);
         }
 
         /// <summary>
