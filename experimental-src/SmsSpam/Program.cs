@@ -50,7 +50,7 @@ namespace SmsSpam
                              };
 
             Console.WriteLine("Reading data file ...");
-            var smsCollection = dataSet.ToList();
+            var smsCollection = dataSet.Distinct().ToList();
             int hamMessageCount = 0;
             int spamMessageCount = 0;
 
@@ -86,7 +86,7 @@ namespace SmsSpam
             Console.WriteLine("Testing Bayes filter ...");
             int correctPredictions = 0;
             int wrongPredictions = 0;
-            var mispredictions = new Collection<Sms>();
+            var mispredictions = new Collection<KeyValuePair<Sms, double>>();
             foreach (var sms in smsCollection)
             {
                 var tokens = GetTokensFromSms(sms).Distinct().ToList();
@@ -110,33 +110,33 @@ namespace SmsSpam
                 {
                     --correctPredictions;
                     ++wrongPredictions;
-                    mispredictions.Add(sms);
+                    mispredictions.Add(new KeyValuePair<Sms, double>(sms, probability));
                     result = "BAD";
                 }
 
-                Console.WriteLine("{3,-4}: SMS of type [{0,-4}] - estimated [{1,-4}] with {2:P}", realType, estimatedType, probability, result);
+                Console.WriteLine("{3,-4}: SMS of type [{0,-4}] - estimated [{1,-4}] with {2,8:P}", realType, estimatedType, probability, result);
                 // Debug.Assert(realType == estimatedType, "realType == estimatedType");
             }
 
             Console.WriteLine();
             var totalPredictions = correctPredictions + wrongPredictions;
-            Console.WriteLine("Correct predictions: {0}/{1} ({2:P})", correctPredictions, totalPredictions,
+            Console.WriteLine("Correct predictions: {0}/{1} ({2,-10:P})", correctPredictions, totalPredictions,
                 (double) correctPredictions/totalPredictions);
-            Console.WriteLine("Mispredictions:      {0}/{1} ({2:P})", wrongPredictions, totalPredictions,
+            Console.WriteLine("Mispredictions:      {0}/{1} ({2,-10:P})", wrongPredictions, totalPredictions,
                 (double)wrongPredictions / totalPredictions);
 
             Console.WriteLine();
             Console.WriteLine("False negatives:");
-            foreach (var misprediction in mispredictions.Where(sms => sms.Type == MessageType.Ham))
+            foreach (var misprediction in mispredictions.Where(sms => sms.Key.Type == MessageType.Ham))
             {
-                Console.WriteLine("- [{0,-4}] {1}", misprediction.Type, misprediction.Content);
+                Console.WriteLine("- [{0,-4} - {2,8:P} SPAM] {1}", misprediction.Key.Type, misprediction.Key.Content, misprediction.Value);
             }
 
             Console.WriteLine();
             Console.WriteLine("False positives:");
-            foreach (var misprediction in mispredictions.Where(sms => sms.Type == MessageType.Spam))
+            foreach (var misprediction in mispredictions.Where(sms => sms.Key.Type == MessageType.Spam))
             {
-                Console.WriteLine("- [{0,-4}] {1}", misprediction.Type, misprediction.Content);
+                Console.WriteLine("- [{0,-4} - {2,8:P} HAM ] {1}", misprediction.Key.Type, misprediction.Key.Content, misprediction.Value);
             }
 
             if (!Debugger.IsAttached) return;
