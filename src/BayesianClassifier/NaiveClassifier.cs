@@ -127,17 +127,12 @@ namespace BayesianClassifier
 
             foreach (var group in cpgs)
             {
-                double products = 1;
-                double productsOfInverse = 1;
-
                 var cps = group.ToCollection();
-                foreach (var cp in cps)
-                {
-                    products *= cp.Probability;
-                    productsOfInverse *= (1 - cp.Probability);
-                }
+                var eta = cps
+                    .Select(cp => cp.Probability)
+                    .Sum(p => Math.Log(1 - p) - Math.Log(p));
 
-                var probability = products / (products + productsOfInverse);
+                var probability = 1/(1 + Math.Exp(eta));
                 yield return new CombinedConditionalProbability(group.Key, probability, cps);
             }
         }

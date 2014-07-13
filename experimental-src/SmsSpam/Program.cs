@@ -84,9 +84,13 @@ namespace SmsSpam
             // spamClass.Probability = (double)spamMessageCount / (hamMessageCount + spamMessageCount);
 
             Console.WriteLine("Testing Bayes filter ...");
+            int correctPredictions = 0;
+            int wrongPredictions = 0;
             foreach (var sms in smsCollection)
             {
                 var tokens = GetTokensFromSms(sms).Distinct().ToList();
+                if (!tokens.Any()) continue;
+
                 var classes = classifier.CalculateProbabilities(tokens)
                     .OrderByDescending(c => c.Probability)
                     .ToList();
@@ -97,8 +101,20 @@ namespace SmsSpam
                 var probability = bestClass.Probability;
                 var result = realType == estimatedType ? "GOOD" : "BAD";
                 Console.WriteLine("{3,-4}: SMS of type [{0,-4}] - estimated [{1,-4}] with {2:P}", realType, estimatedType, probability, result);
-                Debug.Assert(realType == estimatedType, "realType == estimatedType");
+                // Debug.Assert(realType == estimatedType, "realType == estimatedType");
+
+                if (realType == estimatedType)
+                    ++ correctPredictions;
+                else
+                    ++ wrongPredictions;
             }
+
+            Console.WriteLine();
+            var totalPredictions = correctPredictions + wrongPredictions;
+            Console.WriteLine("Correct predictions: {0}/{1} ({2:P})", correctPredictions, totalPredictions,
+                (double) correctPredictions/totalPredictions);
+            Console.WriteLine("Mispredictions:      {0}/{1} ({2:P})", wrongPredictions, totalPredictions,
+                (double)wrongPredictions / totalPredictions);
 
             if (!Debugger.IsAttached) return;
             Console.WriteLine("Press key to exit.");
