@@ -24,5 +24,10 @@ namespace BayesianClassifier
         /// <exception cref="System.ArgumentNullException">dataSets</exception>
         /// <exception cref="System.ArgumentException">A data set for a given class was already registered.</exception>
         void Add([NotNull] IEnumerable<IDataSet> dataSets);
+
+        /// <summary>
+        /// Adjusts the class probabilities based on token count.
+        /// </summary>
+        void AdjustClassProbabilities();
     }
 }

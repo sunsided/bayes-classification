@@ -18,7 +18,7 @@ namespace BayesianClassifier
         /// </para>
         /// </summary>
         double SmoothingAlpha { get; set; }
-
+        
         /// <summary>
         /// Calculates the probability of having the <see cref="IClass"/> 
         /// given the occurrence of the <see cref="IToken"/>.

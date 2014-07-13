@@ -82,6 +82,20 @@ namespace BayesianClassifier
         }
 
         /// <summary>
+        /// Adjusts the class probabilities based on token count.
+        /// </summary>
+        public void AdjustClassProbabilities()
+        {
+            var totalTokenCount = (double)_dataSets.Select(pair => pair.Value.TokenCount).Sum();
+            var inverseTotalTokenCount = 1.0D/totalTokenCount;
+
+            foreach (var dataSet in _dataSets.Select(pair => pair.Value))
+            {
+                dataSet.Class.Probability = dataSet.TokenCount * inverseTotalTokenCount;
+            }
+        }
+
+        /// <summary>
         /// Adds the data set internally.
         /// </summary>
         /// <param name="dataSet">The data set.</param>

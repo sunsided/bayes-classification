@@ -72,6 +72,9 @@ namespace SmsSpam
             hamSet.PurgeWhere(tc => tc.Count <= 2);
             spamSet.PurgeWhere(tc => tc.Count <= 2);
 
+            Console.WriteLine("Adjust class base probabilities ...");
+            trainingSet.AdjustClassProbabilities();
+
             Console.WriteLine("Testing Bayes filter ...");
             foreach (var sms in smsCollection)
             {
