@@ -46,7 +46,7 @@ namespace SmsSpam
 
             var classifier = new NaiveClassifier(trainingSet)
                              {
-                                 SmoothingAlpha = 0.1
+                                 SmoothingAlpha = 0.01
                              };
 
             Console.WriteLine("Reading data file ...");
