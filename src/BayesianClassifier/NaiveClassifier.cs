@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
 using JetBrains.Annotations;
 
 namespace BayesianClassifier
@@ -120,46 +119,26 @@ namespace BayesianClassifier
         public IEnumerable<CombinedConditionalProbability> CalculateProbabilities([NotNull] ICollection<IToken> tokens, double? alpha = null)
         {
             var smoothingAlpha = alpha ?? _smoothingAlpha;
-            var combinedConditionalProbabilities = CalculateCombinedConditionalProbabilities(tokens, smoothingAlpha).ToCollection();
-            var totalProbability = combinedConditionalProbabilities.Sum(ccp => ccp.Probability);
-            foreach (var ccp in combinedConditionalProbabilities)
+
+            var cpgs = tokens
+                .SelectMany(token => CalculateProbabilities(token, smoothingAlpha))
+                .GroupBy(cp => cp.Class)
+                .ToCollection();
+
+            foreach (var group in cpgs)
             {
-                var realProbability = ccp.Probability/totalProbability;
-                yield return new CombinedConditionalProbability(ccp.Class, realProbability, ccp.TokenProbabilities);
-            }
-        }
+                double products = 1;
+                double productsOfInverse = 1;
 
-        /// <summary>
-        /// Calculates the combined conditional probabilities of all tokens appearing for each given class.
-        /// </summary>
-        /// <param name="tokens">The tokens.</param>
-        /// <param name="smoothingAlpha">The smoothing alpha.</param>
-        [NotNull]
-        private IEnumerable<CombinedConditionalProbability> CalculateCombinedConditionalProbabilities([NotNull] ICollection<IToken> tokens, double smoothingAlpha)
-        {
-            foreach (var set in _trainingSets)
-            {
-                var @class = set.Class;
-
-                // store conditional probabilities
-                var conditionalProbabilities = new Collection<ConditionalProbability>();
-
-                // determine the probability of all the tokens appearing in the given class
-                var probabilityInClass = @class.Probability;
-                foreach (var token in tokens)
+                var cps = group.ToCollection();
+                foreach (var cp in cps)
                 {
-                    // calculate probability of the token appearing in the class
-                    var percentage = set.GetPercentage(token, smoothingAlpha);
-                    Debug.Assert(percentage > 0, "percentage of token in set is expected to be larger than zero. Is smoothing applied?");
-
-                    probabilityInClass *= percentage;
-                    Debug.Assert(probabilityInClass > 0, "combined probability of tokens in set is expected to be larger than zero. Is smoothing applied?");
-
-                    conditionalProbabilities.Add(new ConditionalProbability(@class, token, percentage));
+                    products *= cp.Probability;
+                    productsOfInverse *= (1 - cp.Probability);
                 }
 
-                // create grouped conditional probability
-                yield return new CombinedConditionalProbability(@class, probabilityInClass, conditionalProbabilities);
+                var probability = products / (products + productsOfInverse);
+                yield return new CombinedConditionalProbability(group.Key, probability, cps);
             }
         }
 
