@@ -6,7 +6,7 @@ A naive Bayes classifier with Laplace smoothing for arbitrary features written i
 
 * `src` contains the library's source code
 * `test-src` contains the unit tests
-* `experimenta-src` contains test applications
+* `experimental-src` contains test applications
 
 ## SmsSpam example ##
 
