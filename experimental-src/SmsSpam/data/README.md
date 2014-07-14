@@ -1,5 +1,4 @@
 # SMS Spam Collection v.1 #
--------------------------
 
 ## 1. DESCRIPTION ##
 
