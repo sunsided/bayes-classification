@@ -74,5 +74,10 @@ namespace BayesianClassifier
         /// <exception cref="System.ArgumentNullException">tokens</exception>
         /// <seealso cref="RemoveTokenOnce(System.Collections.Generic.IEnumerable{IToken})"/>
         void PurgeToken([NotNull] IEnumerable<IToken> tokens);
+
+        /// <summary>
+        /// Clears this instance.
+        /// </summary>
+        void Clear();
     }
 }

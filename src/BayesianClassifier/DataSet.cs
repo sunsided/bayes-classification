@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
@@ -16,6 +15,42 @@ namespace BayesianClassifier
     [DebuggerDisplay("Data set for class P({Class.Name})={Class.Probability}")]
     public sealed class DataSet : IDataSet
     {
+        /// <summary>
+        /// The training set
+        /// </summary>
+        private readonly ITrainingSetAccessor _trainingSet;
+
+        /// <summary>
+        /// Gets or sets the occurrence threshold.
+        /// <para>
+        /// Any token occurrence lower than the threshold will be assumed to be zero,
+        /// resulting in the assumption that the given token was not seen during training.
+        /// </para>
+        /// </summary>
+        /// <value>The occurrence threshold.</value>
+        /// <exception cref="System.ArgumentOutOfRangeException">value;Value must be greater than or equal to zero.</exception>
+        public int OccurrenceThreshold
+        {
+            get { return _trainingSet.OccurrenceThreshold; }
+            set { _trainingSet.OccurrenceThreshold = value; }
+        }
+
+        /// <summary>
+        /// Gets or sets the percentage threshold.
+        /// <para>
+        /// Any per-class token percentage lower than the threshold will be assumed to be zero,
+        /// resulting in the assumption that the given token was not seen during training.
+        /// </para>
+        /// </summary>
+        /// <value>The occurrence threshold.</value>
+        /// <exception cref="System.ArgumentOutOfRangeException">value;Value must be greater than or equal to zero.</exception>
+        /// <exception cref="NotFiniteNumberException">value;Value must be finite.</exception>
+        public double PercentageThreshold
+        {
+            get { return _trainingSet.PercentageThreshold; }
+            set { _trainingSet.PercentageThreshold = value; }
+        }
+
         /// <summary>
         /// The default smoothing alpha
         /// </summary>
@@ -60,14 +95,18 @@ namespace BayesianClassifier
         public IClass Class { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="DataSet"/> class.
+        /// Initializes a new instance of the <see cref="DataSet" /> class.
         /// </summary>
         /// <param name="class">The class.</param>
+        /// <param name="trainingSet">The training set.</param>
         /// <exception cref="System.ArgumentNullException">@class</exception>
-        public DataSet([NotNull] IClass @class)
+        public DataSet([NotNull] IClass @class, [NotNull] ITrainingSetAccessor trainingSet)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
+            if (ReferenceEquals(trainingSet, null)) throw new ArgumentNullException("trainingSet");
+            
             Class = @class;
+            _trainingSet = trainingSet;
         }
 
         /// <summary>
@@ -99,17 +138,20 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Int64.</returns>
+        /// <exception cref="System.ArgumentNullException">token</exception>
         /// <seealso cref="GetPercentage" />
         public long GetCount([NotNull] IToken token)
         {
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
 
             long count;
-            return !_tokenCount.TryGetValue(token, out count) ? 0 : count;
+            if (!_tokenCount.TryGetValue(token, out count)) return 0;
+            if (count <= OccurrenceThreshold) return 0;
+            return count;
         }
 
         /// <summary>
-        /// Gets the approximated percentage of the given 
+        /// Gets the approximated percentage of the given
         /// <see cref="IToken" /> in this data set
         /// by determining its occurrence count over the whole population.
         /// </summary>
@@ -117,6 +159,7 @@ namespace BayesianClassifier
         /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
         /// <returns>System.Double.</returns>
         /// <exception cref="System.ArgumentNullException">token</exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">alpha;Smoothing parameter alpha must be greater than or equal to zero.</exception>
         /// <seealso cref="GetCount" />
         public double GetPercentage([NotNull] IToken token, double alpha = DefaultSmoothingAlpha)
         {
@@ -124,6 +167,11 @@ namespace BayesianClassifier
             if (alpha < 0) throw new ArgumentOutOfRangeException("alpha", alpha, "Smoothing parameter alpha must be greater than or equal to zero.");
 
             var count = GetCount(token);
+            
+            // check unsmoothed percentage for threshold
+            if (count > 0 && GetPercentage(count) <= PercentageThreshold) count = 0;
+
+            // get smoothed percentage
             return GetPercentage(count, alpha);
         }
 
@@ -142,10 +190,58 @@ namespace BayesianClassifier
             Debug.Assert(alpha >= 0, "alpha >= 0");
             Debug.Assert(tokenCount >= 0, "tokenCount >= 0");
 
-            var totalCount = _setSize; // TODO: cache inverse set size
+#if false
+            var totalCount = _setSize;
             var vocabularySize = TokenCount;
+#else
+            //var totalCount = TokenCount;
+            var totalCount = _setSize;
+            var vocabularySize = _trainingSet.VocabularySize;
+            
+#endif
 
             return (double)(tokenCount + alpha)/(double)(totalCount + alpha*vocabularySize);
+        }
+
+        /// <summary>
+        /// Calculates the minimal smoothed value.
+        /// </summary>
+        /// <param name="tokenCount">The count.</param>
+        /// <param name="totalCount">The total count.</param>
+        /// <param name="alpha">The alpha.</param>
+        /// <returns>System.Double.</returns>
+        public double LapaceSmoothing(long tokenCount, long totalCount, double? alpha = 0)
+        {
+            var a = alpha ?? DefaultSmoothingAlpha;
+
+            var vocabularySize = (double)_trainingSet.VocabularySize;
+            return (tokenCount + a) / (totalCount + a * vocabularySize);
+        }
+
+        /// <summary>
+        /// Gets the approximated percentage of the given
+        /// <see cref="IToken" /> in this data set
+        /// by determining its occurrence count over the whole population.
+        /// </summary>
+        /// <param name="token">The token.</param>
+        /// <param name="alpha">Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.</param>
+        /// <returns>System.Double.</returns>
+        /// <exception cref="System.ArgumentNullException">token</exception>
+        /// <exception cref="System.ArgumentOutOfRangeException">alpha;Smoothing parameter alpha must be greater than or equal to zero.</exception>
+        /// <seealso cref="GetCount" />
+        public TokenStats GetStats([NotNull] IToken token, double alpha)
+        {
+            if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
+            if (alpha < 0) throw new ArgumentOutOfRangeException("alpha", alpha, "Smoothing parameter alpha must be greater than or equal to zero.");
+
+            var count = GetCount(token);
+
+            // check unsmoothed percentage for threshold
+            if (count > 0 && GetPercentage(count) <= PercentageThreshold) count = 0;
+
+            // get smoothed percentage and return
+            var percentage = GetPercentage(count, alpha);
+            return new TokenStats(percentage, count);
         }
 
         /// <summary>
@@ -164,7 +260,7 @@ namespace BayesianClassifier
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
             if (ReferenceEquals(additionalTokens, null)) throw new ArgumentNullException("additionalTokens");
 
-            _tokenCount.AddOrUpdate(token, AddFirsIToken, IncremenITokenCount);
+            _tokenCount.AddOrUpdate(token, AddFirstToken, IncrementTokenCount);
             Interlocked.Increment(ref _setSize);
 
             AddToken(additionalTokens);
@@ -182,7 +278,7 @@ namespace BayesianClassifier
 
             foreach (var token in tokens)
             {
-                _tokenCount.AddOrUpdate(token, AddFirsIToken, IncremenITokenCount);
+                _tokenCount.AddOrUpdate(token, AddFirstToken, IncrementTokenCount);
                 Interlocked.Increment(ref _setSize);
             }
         }
@@ -264,6 +360,14 @@ namespace BayesianClassifier
         }
 
         /// <summary>
+        /// Clears this instance.
+        /// </summary>
+        public void Clear()
+        {
+            _tokenCount.Clear();
+        }
+
+        /// <summary>
         /// Purges the tokens fulfilling the given predicate.
         /// </summary>
         /// <param name="predicate">The predicate.</param>
@@ -323,7 +427,7 @@ namespace BayesianClassifier
         /// </summary>
         /// <param name="token">The token.</param>
         /// <returns>System.Int64.</returns>
-        private static long AddFirsIToken(IToken token)
+        private static long AddFirstToken(IToken token)
         {
             return 1;
         }
@@ -334,7 +438,7 @@ namespace BayesianClassifier
         /// <param name="token">The token.</param>
         /// <param name="count">The number of tokens.</param>
         /// <returns>System.Int64.</returns>
-        private static long IncremenITokenCount(IToken token, long count)
+        private static long IncrementTokenCount(IToken token, long count)
         {
             return count + 1;
         }
@@ -345,7 +449,8 @@ namespace BayesianClassifier
         /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.</returns>
         public IEnumerator<TokenCount> GetEnumerator()
         {
-            return _tokenCount.Select(token => new TokenCount(token.Key, token.Value)).GetEnumerator();
+            var ot = OccurrenceThreshold;
+            return _tokenCount.Select(token => new TokenCount(token.Key, token.Value <= ot ? 0 : token.Value)).GetEnumerator();
         }
 
         /// <summary>

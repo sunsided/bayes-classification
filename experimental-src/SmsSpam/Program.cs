@@ -35,14 +35,14 @@ namespace SmsSpam
             const string path = @".\data\SMSSpamCollection";
             var fileInfo = new FileInfo(path);
             var dataSet = new SmsDataReader(fileInfo);
+            
+            var trainingSet = new TrainingSet();
 
             var hamClass = new EnumClass(MessageType.Ham, 0.5D);
-            var hamSet = new DataSet(hamClass);
+            var hamSet = trainingSet.CreateDataSet(hamClass);
 
             var spamClass = new EnumClass(MessageType.Spam, 0.5D);
-            var spamSet = new DataSet(spamClass);
-
-            var trainingSet = new TrainingSet(hamSet, spamSet);
+            var spamSet = trainingSet.CreateDataSet(spamClass);
 
             var classifier = new NaiveClassifier(trainingSet)
                              {

@@ -65,8 +65,8 @@ namespace BayesianClassifierTests
             var trainingSet = new TrainingSet();
 
             // build data sets
-            var spamSet = BuildSpamDataSet();
-            var hamSet = BuildHamDataSet();
+            var spamSet = BuildSpamDataSet(trainingSet);
+            var hamSet = BuildHamDataSet(trainingSet);
 
             // monkey test
             spamSet.SetSize.Should()
@@ -86,9 +86,9 @@ namespace BayesianClassifierTests
         /// </summary>
         /// <returns>IDataSet&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private static IDataSet BuildSpamDataSet()
+        private static IDataSet BuildSpamDataSet([NotNull] ITrainingSet ts)
         {
-            return BuildDataSet("spam", 0.5D, "rolex", "watches", "viagra", "prince", "money", "send", "xyzzy");
+            return BuildDataSet(ts, "spam", 0.5D, "rolex", "watches", "viagra", "prince", "money", "send", "xyzzy");
         }
 
         /// <summary>
@@ -96,24 +96,26 @@ namespace BayesianClassifierTests
         /// </summary>
         /// <returns>IDataSet&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private static IDataSet BuildHamDataSet()
+        private static IDataSet BuildHamDataSet([NotNull] ITrainingSet ts)
         {
-            return BuildDataSet("ham", 0.5D, "love", "flowers", "unicorn", "friendship", "money", "send", "send");
+            return BuildDataSet(ts, "ham", 0.5D, "love", "flowers", "unicorn", "friendship", "money", "send", "send");
         }
 
         /// <summary>
         /// Builds the data set.
         /// </summary>
+        /// <param name="ts">The training set.</param>
         /// <param name="className">Name of the class.</param>
         /// <param name="classProbability">The class probability.</param>
         /// <param name="token">The token.</param>
         /// <param name="additionalTokens">The additional tokens.</param>
         /// <returns>IDataSet&lt;StringClass, StringToken&gt;.</returns>
         [NotNull]
-        private static IDataSet BuildDataSet([NotNull] string className, double classProbability, [NotNull] string token, [NotNull] params string[] additionalTokens)
+        private static IDataSet BuildDataSet([NotNull] ITrainingSet ts, [NotNull] string className, double classProbability, [NotNull] string token, [NotNull] params string[] additionalTokens)
         {
             var @class = new StringClass(className, classProbability);
-            var dataSet = new DataSet(@class);
+
+            var dataSet = ts.CreateDataSet(@class);
 
             dataSet.AddToken(new StringToken(token));
             dataSet.AddToken(additionalTokens.Select(t => new StringToken(t)));

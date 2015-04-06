@@ -26,7 +26,7 @@ namespace BayesianClassifierTests
         public void SetUp()
         {
             _class = new StringClass(Guid.NewGuid().ToString(), 1.0D);
-            _dataSet = new DataSet(_class);
+            _dataSet = new DataSet(_class, new NullTrainingSetAccessor());
         }
 
         [Test]

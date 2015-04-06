@@ -21,6 +21,7 @@ namespace BayesianClassifier
         /// Initializes a new instance of the <see cref="StringToken"/> class.
         /// </summary>
         /// <param name="value">The value.</param>
+        [DebuggerStepThrough]
         public StringToken([NotNull] string value)
         {
             if (ReferenceEquals(value, null)) throw new ArgumentNullException("value");

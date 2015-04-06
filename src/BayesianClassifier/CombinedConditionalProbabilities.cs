@@ -34,6 +34,7 @@ namespace BayesianClassifier
         /// <param name="class">The class.</param>
         /// <param name="probability">The probability.</param>
         /// <param name="tokenProbabilities">The tokenProbabilities.</param>
+        [DebuggerStepThrough]
         public CombinedConditionalProbability([NotNull] IClass @class, double probability, [NotNull] ICollection<ConditionalProbability> tokenProbabilities)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");

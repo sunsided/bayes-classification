@@ -10,6 +10,13 @@ namespace BayesianClassifier
     public interface IClassifier
     {
         /// <summary>
+        /// Gets or sets the probability correction.
+        /// </summary>
+        /// <value>The probability correction.</value>
+        [CanBeNull]
+        IProbabilityCorrection ProbabilityCorrection { get; set; }
+
+        /// <summary>
         /// Additive smoothing parameter. If set to zero, no Laplace smoothing will be applied.
         /// <para>
         /// Laplace smoothing is required in the context or rare (i.e. untrained) tokens or tokens
@@ -20,6 +27,37 @@ namespace BayesianClassifier
         /// </summary>
         double SmoothingAlpha { get; set; }
         
+        /// <summary>
+        /// Gets or sets the messages norm length.
+        /// </summary>
+        /// <value>The norm length of a message.</value>
+        /// <exception cref="System.ArgumentOutOfRangeException">value;Value must be greater than or equal to zero.</exception>
+        /// <exception cref="System.NotFiniteNumberException">The value must be a finite number.</exception>
+        double NormLength { get; set; }
+
+        /// <summary>
+        /// Gets or sets the occurrence threshold.
+        /// <para>
+        /// Any token occurrence lower than the threshold will be assumed to be zero,
+        /// resulting in the assumption that the given token was not seen during training.
+        /// </para>
+        /// </summary>
+        /// <value>The occurrence threshold.</value>
+        /// <exception cref="System.ArgumentOutOfRangeException">value;Value must be greater than or equal to zero.</exception>
+        int OccurrenceThreshold { get; set; }
+
+        /// <summary>
+        /// Gets or sets the percentage threshold.
+        /// <para>
+        /// Any per-class token percentage lower than the threshold will be assumed to be zero,
+        /// resulting in the assumption that the given token was not seen during training.
+        /// </para>
+        /// </summary>
+        /// <value>The occurrence threshold.</value>
+        /// <exception cref="System.ArgumentOutOfRangeException">value;Value must be greater than or equal to zero.</exception>
+        /// <exception cref="NotFiniteNumberException">value;Value must be finite.</exception>
+        double PercentageThreshold { get; set; }
+
         /// <summary>
         /// Calculates the probability of having the <see cref="IClass"/> 
         /// given the occurrence of the <see cref="IToken"/>.

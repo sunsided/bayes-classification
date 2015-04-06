@@ -37,19 +37,23 @@ namespace BayesianClassifier
         /// <param name="token">The token.</param>
         /// <param name="probability">The probability.</param>
         /// <param name="occurrence">The occurrence.</param>
+        /// <param name="disableCheck">if set to <see langword="true" /> value checks are disabled.</param>
         /// <exception cref="System.ArgumentNullException">@class
         /// or
         /// token</exception>
         /// <exception cref="System.ArgumentOutOfRangeException">probability;Probability must greater than or equal to zero
         /// or
         /// probability;Probability must less than or equal to one</exception>
-        public ConditionalProbability([NotNull] IClass @class, [NotNull] IToken token, double probability, long occurrence)
+        public ConditionalProbability([NotNull] IClass @class, [NotNull] IToken token, double probability, long occurrence, bool disableCheck = false)
         {
             if (ReferenceEquals(@class, null)) throw new ArgumentNullException("class");
             if (ReferenceEquals(token, null)) throw new ArgumentNullException("token");
-            if (probability < 0) throw new ArgumentOutOfRangeException("probability", probability, "Probability must greater than or equal to zero");
-            if (probability > 1) throw new ArgumentOutOfRangeException("probability", probability, "Probability must less than or equal to one");
-            if (probability < 0) throw new ArgumentOutOfRangeException("occurrence", occurrence, "Occurrence must greater than or equal to zero");
+            if (!disableCheck)
+            {
+                if (probability < 0) throw new ArgumentOutOfRangeException("probability", probability,"Probability must greater than or equal to zero");
+                if (probability > 1) throw new ArgumentOutOfRangeException("probability", probability, "Probability must less than or equal to one");
+            }
+            if (occurrence < 0) throw new ArgumentOutOfRangeException("occurrence", occurrence, "Occurrence must greater than or equal to zero");
 
             Class = @class;
             Token = token;
