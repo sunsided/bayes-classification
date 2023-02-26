@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Title>Bayesian Classifier Experiments: SMS Spam Classification</Title>
+    <Description>Test Application for the Bayesian Classifier Experiments</Description>
+    <Copyright>Copyright © 2014-2023 Markus Mayer</Copyright>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\BayesianClassifier\BayesianClassifier.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="data\SMSSpamCollection" />
+  </ItemGroup>
+</Project>

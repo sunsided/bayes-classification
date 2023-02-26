@@ -3,20 +3,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30110.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BayesianClassifier", "src\BayesianClassifier\BayesianClassifier.csproj", "{E5EFB9FE-9A66-4345-A03D-F14D49A9B955}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{07EBAE0B-2E1E-4453-BE40-D23F15FBEFCD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BayesianClassifierTests", "test-src\BayesianClassifierTests\BayesianClassifierTests.csproj", "{A05F5451-EC2F-43D0-9E18-26846553D6CD}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9A329116-41DF-4CDF-B7E9-1DC653D53874}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmsSpam", "experimental-src\SmsSpam\SmsSpam.csproj", "{141D22E9-5DA8-4D84-9BFF-F57DF2904A75}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{6F25B4BD-EBD7-4F5B-9BF1-6438D1436B14}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{05857168-EFA8-435D-8DBA-656ED6048D3D}"
-	ProjectSection(SolutionItems) = preProject
-		.nuget\NuGet.Config = .nuget\NuGet.Config
-		.nuget\NuGet.exe = .nuget\NuGet.exe
-		.nuget\NuGet.targets = .nuget\NuGet.targets
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmsSpam", "samples\SmsSpam\SmsSpam.csproj", "{7BC59BE4-6CDF-4950-809D-C347304943E2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Experimental", "Experimental", "{27D8C3EE-2E52-444F-9ACE-C37FF4D659F8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BayesianClassifier", "src\BayesianClassifier\BayesianClassifier.csproj", "{8D95D900-D8F1-4204-AB50-47950DAE8CA2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BayesianClassifier.Tests", "test\BayesianClassifier.Tests\BayesianClassifier.Tests.csproj", "{2545F47D-CDD0-4FC5-AB78-F8AA75E52DD9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,23 +21,25 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E5EFB9FE-9A66-4345-A03D-F14D49A9B955}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5EFB9FE-9A66-4345-A03D-F14D49A9B955}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5EFB9FE-9A66-4345-A03D-F14D49A9B955}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5EFB9FE-9A66-4345-A03D-F14D49A9B955}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A05F5451-EC2F-43D0-9E18-26846553D6CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A05F5451-EC2F-43D0-9E18-26846553D6CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A05F5451-EC2F-43D0-9E18-26846553D6CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A05F5451-EC2F-43D0-9E18-26846553D6CD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{141D22E9-5DA8-4D84-9BFF-F57DF2904A75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{141D22E9-5DA8-4D84-9BFF-F57DF2904A75}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{141D22E9-5DA8-4D84-9BFF-F57DF2904A75}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{141D22E9-5DA8-4D84-9BFF-F57DF2904A75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BC59BE4-6CDF-4950-809D-C347304943E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BC59BE4-6CDF-4950-809D-C347304943E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BC59BE4-6CDF-4950-809D-C347304943E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BC59BE4-6CDF-4950-809D-C347304943E2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D95D900-D8F1-4204-AB50-47950DAE8CA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D95D900-D8F1-4204-AB50-47950DAE8CA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D95D900-D8F1-4204-AB50-47950DAE8CA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D95D900-D8F1-4204-AB50-47950DAE8CA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2545F47D-CDD0-4FC5-AB78-F8AA75E52DD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2545F47D-CDD0-4FC5-AB78-F8AA75E52DD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2545F47D-CDD0-4FC5-AB78-F8AA75E52DD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2545F47D-CDD0-4FC5-AB78-F8AA75E52DD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{141D22E9-5DA8-4D84-9BFF-F57DF2904A75} = {27D8C3EE-2E52-444F-9ACE-C37FF4D659F8}
+		{7BC59BE4-6CDF-4950-809D-C347304943E2} = {07EBAE0B-2E1E-4453-BE40-D23F15FBEFCD}
+		{8D95D900-D8F1-4204-AB50-47950DAE8CA2} = {9A329116-41DF-4CDF-B7E9-1DC653D53874}
+		{2545F47D-CDD0-4FC5-AB78-F8AA75E52DD9} = {6F25B4BD-EBD7-4F5B-9BF1-6438D1436B14}
 	EndGlobalSection
 EndGlobal

@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace BayesianClassifier
+namespace BayesianClassifier;
+
+/// <summary>
+/// Interface IToken
+/// </summary>
+public interface IToken : IEquatable<IToken>
 {
-    /// <summary>
-    /// Interface IToken
-    /// </summary>
-    public interface IToken : IEquatable<IToken>
-    {
-    }
 }
