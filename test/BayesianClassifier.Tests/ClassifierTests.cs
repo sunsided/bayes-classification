@@ -1,23 +1,19 @@
 ﻿using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace BayesianClassifier.Tests;
 
-[TestFixture]
-public class ClassifierTests
+public sealed class ClassifierTests
 {
     private static IClass? _spamClass;
     private static IClass? _hamClass;
-    private ITrainingSet? _trainingSet;
+    private readonly IClassifier _classifier;
 
-    private IClassifier? _classifier;
-
-    [SetUp]
-    public void SetUp()
+    public ClassifierTests()
     {
-        _trainingSet = BuildTrainingSet();
-        _classifier = BuildClassifier(_trainingSet);
+        var trainingSet = BuildTrainingSet();
+        _classifier = BuildClassifier(trainingSet);
     }
 
     /// <summary>
@@ -91,30 +87,30 @@ public class ClassifierTests
         return dataSet;
     }
 
-    [Test]
+    [Fact]
     public void CalculateProbabilityReturnsOneHundredPercentForAKnownSpamWord()
     {
         var token = new StringToken("rolex");
 
-        var probability = _classifier!.CalculateProbability(_spamClass!, token);
+        var probability = _classifier.CalculateProbability(_spamClass!, token);
         probability.Should().BeApproximately(1.0D, 0.0001D, "because the word is known the be a spam word");
     }
 
-    [Test]
+    [Fact]
     public void CalculateProbabilityReturnsOneHundredPercentForAKnownHamWord()
     {
         var token = new StringToken("unicorn");
 
-        var probability = _classifier!.CalculateProbability(_hamClass!, token);
+        var probability = _classifier.CalculateProbability(_hamClass!, token);
         probability.Should().BeApproximately(1.0D, 0.0001D, "because the word is known the be a ham word");
     }
 
-    [Test]
+    [Fact]
     public void CalculateProbabilitiesWithHamWordReturnsProbabilitiesForAllClasses()
     {
         var token = new StringToken("unicorn");
 
-        var probabilities = _classifier!.CalculateProbabilities(token).ToList();
+        var probabilities = _classifier.CalculateProbabilities(token).ToList();
         probabilities.Single(static p => p.Class.Equals(_spamClass))
             .Probability.Should()
             .BeApproximately(0D, 0.000001D, "because the token is known to be a ham word");
@@ -124,12 +120,12 @@ public class ClassifierTests
             .BeApproximately(1D, 0.000001D, "because the token is known to be a ham word");
     }
 
-    [Test]
+    [Fact]
     public void CalculateProbabilitiesWithMixedWordReturnsProbabilitiesForAllClasses()
     {
         var token = new StringToken("money");
 
-        var probabilities = _classifier!.CalculateProbabilities(token).ToList();
+        var probabilities = _classifier.CalculateProbabilities(token).ToList();
         probabilities.Single(static p => p.Class.Equals(_spamClass))
             .Probability.Should()
             .BeApproximately(0.5D, 0.000001D, "because the token is known to be a ham and spam word");
@@ -139,12 +135,12 @@ public class ClassifierTests
             .BeApproximately(0.5D, 0.000001D, "because the token is known to be a ham and spam  word");
     }
 
-    [Test]
+    [Fact]
     public void CalculateProbabilitiesWithMixedWordThatIsMoreLikelyHamThanSpamReturnsProbabilitiesForAllClasses()
     {
         var token = new StringToken("send");
 
-        var probabilities = _classifier!.CalculateProbabilities(token).ToList();
+        var probabilities = _classifier.CalculateProbabilities(token).ToList();
         probabilities.Single(static p => p.Class.Equals(_spamClass))
             .Probability.Should()
             .BeApproximately(1/3D, 0.000001D, "because the token is more likely to be a ham than spam word");
@@ -154,7 +150,7 @@ public class ClassifierTests
             .BeApproximately(2/3D, 0.000001D, "because the token is more likely to be a ham than spam word");
     }
 
-    [Test]
+    [Fact]
     public void CalculateProbabilitiesWithRareTokensAndSmoothingAlphaIsUnambiguous()
     {
         var token1 = new StringToken("rolex");
@@ -162,7 +158,7 @@ public class ClassifierTests
         var token3 = new StringToken("send");
 
         const double smoothingAlpha = 1.0D;
-        var probabilities = _classifier!.CalculateProbabilities(new IToken[] {token1, token2, token3}, smoothingAlpha).ToList();
+        var probabilities = _classifier.CalculateProbabilities(new IToken[] {token1, token2, token3}, smoothingAlpha).ToList();
 
         probabilities.Single(static p => p.Class.Equals(_spamClass))
             .Probability.Should()

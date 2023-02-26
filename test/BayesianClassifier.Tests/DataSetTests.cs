@@ -1,52 +1,40 @@
 ﻿using System;
 using System.Linq;
 using FluentAssertions;
-using NUnit.Framework;
+using Xunit;
 
 namespace BayesianClassifier.Tests;
 
-[TestFixture]
-public class DataSetTests
+public sealed class DataSetTests
 {
-    /// <summary>
-    /// The class
-    /// </summary>
-    private StringClass _class = null!;
+    private readonly StringClass _class;
+    private readonly DataSet _dataSet;
 
-    /// <summary>
-    /// The data set
-    /// </summary>
-    private DataSet _dataSet = null!;
-
-    /// <summary>
-    /// Sets up the test.
-    /// </summary>
-    [SetUp]
-    public void SetUp()
+    public DataSetTests()
     {
         _class = new StringClass(Guid.NewGuid().ToString(), 1.0D);
         _dataSet = new DataSet(_class);
     }
 
-    [Test]
+    [Fact]
     public void AfterConstructionClassIsAccessible()
     {
         _dataSet.Class.Should().Be(_class, "because we set the class in the constructor");
     }
 
-    [Test]
+    [Fact]
     public void AfterConstructionTokenCountIsZero()
     {
         _dataSet.TokenCount.Should().Be(0, "because no tokens are registered");
     }
 
-    [Test]
+    [Fact]
     public void AfterConstructionSetSizeIsZero()
     {
         _dataSet.SetSize.Should().Be(0, "because no tokens are registered");
     }
 
-    [Test]
+    [Fact]
     public void AfterAddingATokenTheTokenCountIncrementsOnce()
     {
         var token = new StringToken("foo");
@@ -55,7 +43,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(1, "because we added a single token");
     }
 
-    [Test]
+    [Fact]
     public void AfterAddingATokenTwiceTheTokenCountIncrementsOnceAndTheSetSizeTwice()
     {
         var token1 = new StringToken("foo");
@@ -66,7 +54,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(2, "because we added the same token twice");
     }
 
-    [Test]
+    [Fact]
     public void AfterAddingTwoTokensTheTokenCountIncrementsTwiceAndTheSetSizeTwice()
     {
         var token1 = new StringToken("foo");
@@ -77,7 +65,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(2, "because we added two tokens");
     }
 
-    [Test]
+    [Fact]
     public void AfterRemovingATokenTheTokenCountAndSetSizeDecrements()
     {
         var token1 = new StringToken("foo");
@@ -90,7 +78,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(1, "because we added two tokens and then removed one");
     }
 
-    [Test]
+    [Fact]
     public void AfterRemovingTwoTokenTheTokenCountAndSetSizeAreZero()
     {
         var token1 = new StringToken("foo");
@@ -104,7 +92,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(0, "because we added two tokens and then removed both");
     }
 
-    [Test]
+    [Fact]
     public void AfterRemovingATokenWithMultipleOccurrencesTheSetSizeDecrements()
     {
         var token1 = new StringToken("foo");
@@ -117,7 +105,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(1, "because we added two tokens and then removed one");
     }
 
-    [Test]
+    [Fact]
     public void AfterPurginATokenWithMultipleOccurrencesTheTokenCountAndSetSizeDecrements()
     {
         var token1 = new StringToken("foo");
@@ -130,7 +118,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(0, "because we added two tokens and then purged them");
     }
 
-    [Test]
+    [Fact]
     public void AfterPurginATokenWithMultipleOccurrencesTheTokenCountAndSetSizeDecrementsButKeepsTheRemainingTokens()
     {
         var token1 = new StringToken("foo");
@@ -145,7 +133,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(1, "because we added three tokens and then purged two of them");
     }
 
-    [Test]
+    [Fact]
     public void AddingMultipleTokensIncrementsCountAndSetSize()
     {
         var token1 = new StringToken("foo");
@@ -157,7 +145,7 @@ public class DataSetTests
         _dataSet.SetSize.Should().Be(3, "because we added three tokens");
     }
 
-    [Test]
+    [Fact]
     public void EnumeratingTheTokensYieldsTheCurrectCount()
     {
         var token1 = new StringToken("foo");
@@ -193,7 +181,7 @@ public class DataSetTests
             .Be(1, "because one instance of that token was added");
     }
 
-    [Test]
+    [Fact]
     public void GetCountReturnsTheCorrectCountPerToken()
     {
         var token1 = new StringToken("foo");
@@ -205,7 +193,7 @@ public class DataSetTests
         _dataSet.GetCount(token3).Should().Be(1, "because we added that token once");
     }
 
-    [Test]
+    [Fact]
     public void GetPercentageReturnsTheCorrectPercentagePerToken()
     {
         var token1 = new StringToken("foo");
@@ -221,7 +209,7 @@ public class DataSetTests
             .BeApproximately(1/3D, 0.0001D, "because we added that token once out of three tokens");
     }
 
-    [Test]
+    [Fact]
     public void IndexerReturnsTheCorrectTokenInformation()
     {
         var token1 = new StringToken("foo");
