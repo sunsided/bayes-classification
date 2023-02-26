@@ -1,4 +1,5 @@
 ﻿using System;
+using BayesianClassifier.Abstractions;
 
 namespace BayesianClassifier;
 

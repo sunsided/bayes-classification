@@ -1,5 +1,6 @@
 ﻿using System;
 using BayesianClassifier;
+using BayesianClassifier.Abstractions;
 
 namespace SmsSpam;
 

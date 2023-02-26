@@ -1,4 +1,5 @@
 ﻿using System;
+using BayesianClassifier.Abstractions;
 
 namespace BayesianClassifier;
 
@@ -8,21 +9,6 @@ namespace BayesianClassifier;
 public struct TokenInformation<TToken>
     where TToken: IToken
 {
-    /// <summary>
-    /// The token
-    /// </summary>
-    public readonly TToken Token;
-
-    /// <summary>
-    /// The count in the class
-    /// </summary>
-    public long Count;
-
-    /// <summary>
-    /// The occurrence percentage of the token in the class.
-    /// </summary>
-    public double Percentage;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TokenInformation{TToken}" /> struct.
     /// </summary>
@@ -45,4 +31,19 @@ public struct TokenInformation<TToken>
         Count = count;
         Percentage = percentage;
     }
+
+    /// <summary>
+    /// The token
+    /// </summary>
+    public TToken Token { get; }
+
+    /// <summary>
+    /// The count in the class
+    /// </summary>
+    public long Count { get; }
+
+    /// <summary>
+    /// The occurrence percentage of the token in the class.
+    /// </summary>
+    public double Percentage { get; }
 }

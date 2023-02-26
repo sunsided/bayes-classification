@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace BayesianClassifier;
+namespace BayesianClassifier.Abstractions;
 
 /// <summary>
 /// Interface IDataSetAccessor

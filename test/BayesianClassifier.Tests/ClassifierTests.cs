@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using BayesianClassifier.Abstractions;
 using FluentAssertions;
 using Xunit;
 

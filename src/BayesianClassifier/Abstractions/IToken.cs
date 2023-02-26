@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BayesianClassifier;
+namespace BayesianClassifier.Abstractions;
 
 /// <summary>
 /// Interface IToken

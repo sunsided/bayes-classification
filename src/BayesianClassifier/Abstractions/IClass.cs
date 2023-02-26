@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace BayesianClassifier;
+namespace BayesianClassifier.Abstractions;
 
 /// <summary>
 /// Interface IClass

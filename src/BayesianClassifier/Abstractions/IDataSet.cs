@@ -1,4 +1,4 @@
-namespace BayesianClassifier;
+namespace BayesianClassifier.Abstractions;
 
 /// <summary>
 /// Interface IDataSet
