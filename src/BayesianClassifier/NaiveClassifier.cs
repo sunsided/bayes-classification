@@ -34,7 +34,7 @@ public sealed class NaiveClassifier : IClassifier
         get => _smoothingAlpha;
         set
         {
-            if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
+            if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be nonnegative.");
             _smoothingAlpha = value;
         }
     }
